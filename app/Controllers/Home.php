@@ -11,8 +11,10 @@ class Home extends BaseController
 
     public function index(): string
     {
-        $menus = [];
-        
+        $userId = $this->session->userId;
+        // Lấy danh sách menu từ model (không dùng lệnh kết nối DB trực tiếp trong controller)
+        $menus = $this->userModel->getUserMainMenu($userId);
+        $this->assign('menus', $menus);
         return $this->render();
     }
 }

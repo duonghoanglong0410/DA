@@ -220,4 +220,42 @@ class UsersModel extends BaseModel
         }
         return $result;
     }
+
+    /**
+     * Lấy danh sách menu (permission với is_main_menu = 1) mà user được cấp,
+     * nhóm theo trường "group".
+     *
+     * @param int $userId
+     * @return array Mảng menu được nhóm theo group
+     */
+    public function getUserMainMenu($userId)
+    {
+        // Sử dụng query builder từ model (không cần kết nối DB trong controller)
+        $builder = $this->db->table('user_role_assignments');
+        $builder->select('permissions.*');
+        $builder->join('role_permission', 'role_permission.role_id = user_role_assignments.role_id', 'inner');
+        $builder->join('permissions', 'permissions.id = role_permission.permission_id', 'inner');
+        $builder->where('user_role_assignments.user_id', $userId);
+        $builder->where('permissions.is_main_menu', 1);
+        $query = $builder->get();
+        $permissions = $query->getResultArray();
+
+        $menus = [];
+        foreach ($permissions as $perm) {
+            $group = !empty($perm['group']) ? $perm['group'] : 'UNGROUPED';
+            if (!isset($menus[$group])) {
+                $menus[$group] = [];
+            }
+            $menus[$group][] = [
+                'title'      => $perm['name'],
+                'desc'       => $perm['description'],
+                'icon_class' => $perm['icon_class'],
+                'action'     => $perm['action'],
+                'method'     => $perm['method']
+            ];
+        }
+        // Sắp xếp các group theo thứ tự chữ nếu cần
+        ksort($menus);
+        return $menus;
+    }    
 }

@@ -76,7 +76,8 @@ abstract class BaseController extends Controller
         $this->session = \Config\Services::session();
 
         #Tự động chạy migration trong lần đầu tiên user vào hệ thống nếu có thay đổi
-        if (empty($this->session->didMigration)) {
+        if (empty($this->session->didMigration)) 
+        {
             $migration = \Config\Services::migrations();
             try {
                 $migration->setNamespace(null)->latest();

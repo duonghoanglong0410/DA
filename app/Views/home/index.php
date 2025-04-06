@@ -14,6 +14,6 @@
         </div>
       </div>
     </div>
-    {menus}
+    {/menus}
   </div>
 </div>
