@@ -1,0 +1,40 @@
+.menu-card {
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+
+.menu-card:hover {
+    transform: scale(1.02);
+}
+
+.menu-icon {
+    font-size: 5rem;
+    /* Icon lớn gấp đôi */
+    margin-right: 3rem;
+    /* Tăng khoảng cách giữa icon và text */
+}
+
+.menu-desc {
+    font-size: 0.875rem;
+    color: #6c757d;
+    /* text-muted */
+}
+
+.menu-item
+{
+    cursor: pointer;
+}
+
+.menu-item .flex-grow-1 {
+    margin-left: 12px;
+}
+
+.mainmenu .col
+{
+    margin-bottom: 12px;
+}
+
+.mainmenu .col .text-dark
+{
+    height: 34px;
+}

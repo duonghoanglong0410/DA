@@ -119,7 +119,8 @@ class UsersModel extends BaseModel
         // Mảng các controller có truy cập công khai với các method cho phép.
         // Lưu ý: Controller được lưu dưới dạng chữ thường.
         $publicAccess = [
-            'user' => ['getLogin', 'postAuthencation', 'getError']
+            'user' => ['getLogin', 'postAuthencation', 'getError'],
+            'home' => ['index'],
         ];
         
         // Kiểm tra nếu controller và method nằm trong danh sách public access

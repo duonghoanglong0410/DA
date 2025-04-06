@@ -106,7 +106,7 @@ abstract class BaseController extends Controller
                     return;
                 }
                 //nếu không thì đá về trang login
-                header('Location: ' . site_url(("/user/login")));
+                header('Location: ' . site_url("/user/login"));
                 exit;
             }
 
@@ -117,11 +117,11 @@ abstract class BaseController extends Controller
         }
 
         //Ghi nhận các giá trị cơ bản
-        // $this->assign('userFullName', $user['fullname']);
+        $this->assign('userFullName', $user['fullname']);
 
         if (empty($user) || !$this->userModel->hasAccess($this->session->userId, $controller, $method) || !$this->isValidRole($this->session->userRole, $method))
         {
-            header('Location: ' . site_url(("/user/error")));
+            header('Location: ' . site_url("/user/error"));
             exit;
         }
 

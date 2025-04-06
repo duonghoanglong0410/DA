@@ -47,7 +47,7 @@ class User extends BaseController
         $user = $this->userModel->authenticate($username, $password, $remember_token);
         if ($user) {
             $this->session->set('userId', $user['id']);
-            return redirect()->to('/home');
+            return redirect()->to('/');
         } else {
             $this->session->setFlashdata('error', 'Thông tin đăng nhập không chính xác.');
             return redirect()->to('/user/login');
