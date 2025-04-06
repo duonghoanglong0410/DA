@@ -9,21 +9,44 @@ class UsersModel extends BaseModel
     protected $table = 'users';
     protected $primaryKey = 'id';
     protected $allowedFields = ['username', 'password', 'remember_token', 'status', 'created_at', 'updated_at'];
-    
+
     protected $beforeInsert = ['hashPasswordAndToken'];
     protected $beforeUpdate = ['hashPasswordAndToken'];
+
+    private function hashAString($str)
+    {
+        // Kiểm tra nếu chuỗi là base64 hợp lệ
+        if ($this->isValidBase64($str)) {
+            $decoded = base64_decode($str, true);
+            // Nếu chuỗi decoded bắt đầu bằng "$2y$10$", nghĩa là đã được hash rồi
+            if (strpos($decoded, '$2y$10$') === 0) {
+                return $str;
+            }
+        }
+        // Nếu không, tiến hành hash và encode
+        return base64_encode(password_hash($str, PASSWORD_BCRYPT));
+    }
+    
+    /**
+     * Kiểm tra xem chuỗi có phải là base64 hợp lệ hay không.
+     *
+     * @param string $s
+     * @return bool
+     */
+    private function isValidBase64($s)
+    {
+        // So sánh chuỗi encode lại của decoded với chuỗi gốc
+        return (base64_encode(base64_decode($s, true)) === $s);
+    }
+    
 
     protected function hashPasswordAndToken(array $data)
     {
         if (isset($data['data']['password'])) {
-            if (strlen($data['data']['password']) !== 60) {
-                $data['data']['password'] = password_hash($data['data']['password'], PASSWORD_DEFAULT);
-            }
+            $data['data']['password'] = $this->hashAString($data['data']['password']);
         }
-        if (isset($data['data']['remember_token'])) {
-            if (!empty($data['data']['remember_token']) && strlen($data['data']['remember_token']) !== 60) {
-                $data['data']['remember_token'] = password_hash($data['data']['remember_token'], PASSWORD_DEFAULT);
-            }
+        if (!empty($data['data']['remember_token'])) {
+            $data['data']['remember_token'] = $this->hashAString($data['data']['remember_token']);
         }
         return $data;
     }
@@ -34,16 +57,17 @@ class UsersModel extends BaseModel
         if (!$user) {
             return false;
         }
-        if (!password_verify($password, $user['password'])) {
+        if (!password_verify($password, base64_decode($user['password']))) {
+
             return false;
         }
         if ($remember_token) {
-            $hashedToken = password_hash($remember_token, PASSWORD_DEFAULT);
-            $this->update($user['id'], ['remember_token' => $hashedToken]);
+            // $hashedToken = $this->hashAString($remember_token);
+            $this->update($user['id'], ['remember_token' => $remember_token]);
             helper('cookie');
             // Lưu token gốc vào cookie cho 30 ngày
             set_cookie('remember_token', $remember_token, 86400 * 30);
-            $user['remember_token'] = $hashedToken;
+            // $user['remember_token'] = $hashedToken;
         }
         return $user;
     }
@@ -81,7 +105,7 @@ class UsersModel extends BaseModel
         delete_cookie('remember_token');
         return $result;
     }
-    
+
     /**
      * Kiểm tra quyền truy cập chung.
      * 
@@ -161,7 +185,7 @@ class UsersModel extends BaseModel
         foreach ($query->getResultArray() as $row) {
             $userRoles[] = $row['name'];
         }
-        
+
         // Danh sách role cố định theo văn bản gốc và mapping sang key tiếng Anh mong muốn:
         $rolesMapping = [
             'Nhân viên bãi'              => 'PURCHASE_YARD_EMPLOYEE',
@@ -176,12 +200,11 @@ class UsersModel extends BaseModel
             'Quản lý chi phí hải quan'    => 'CUSTOMS_COST_MANAGER',
             'Quản lý hệ thống'            => 'SYSTEM_MANAGER'
         ];
-    
+
         $result = [];
         foreach ($rolesMapping as $roleName => $key) {
             $result[$key] = in_array($roleName, $userRoles) ? [[1]] : [];
         }
         return $result;
     }
-      
 }
