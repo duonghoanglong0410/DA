@@ -19,12 +19,12 @@ abstract class BaseModel extends Model
     protected $primaryKey         = 'id';
     protected $useAutoIncrement   = true;
     protected $returnType         = 'array';
-    protected $useSoftDeletes     = true;
+    protected $useSoftDeletes     = false;
     //protected $allowedFields      = ['code', 'title', 'unit', 'quantity', 'alert_quantity'];
     protected $useTimestamps      = true;
     protected $createdField       = 'created_at';
     protected $updatedField       = 'updated_at';
-    protected $deletedField       = 'deleted_at';
+    protected $deletedField       = '';
     protected $validationRules    = [];
     protected $validationMessages = [];
     protected $skipValidation     = false;
@@ -156,6 +156,11 @@ abstract class BaseModel extends Model
         if ($this->startsWith($name, 'findFirstBy'))
         {
             $column  = strtolower(substr($name, strlen('findFirstBy')));
+            $oneOnly = true;
+        }
+        if ($this->startsWith($name, 'findOneBy'))
+        {
+            $column  = strtolower(substr($name, strlen('findOneBy')));
             $oneOnly = true;
         }
         elseif ($this->startsWith($name, 'findBy'))

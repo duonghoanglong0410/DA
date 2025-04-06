@@ -14,21 +14,38 @@
 # ENVIRONMENT
 #--------------------------------------------------------------------
 
+CI_ENVIRONMENT = development
 # CI_ENVIRONMENT = production
 
 #--------------------------------------------------------------------
 # APP
 #--------------------------------------------------------------------
 
-# app.baseURL = ''
+app.baseURL = 'https://www.atvn.net'
 # If you have trouble with `.`, you could also use `_`.
 # app_baseURL = ''
 # app.forceGlobalSecureRequests = false
 # app.CSPEnabled = false
 
+# app.sessionDriver = 'CodeIgniter\Session\Handlers\FileHandler'
+app.sessionDriver = 'CodeIgniter\Session\Handlers\DatabaseHandler'
+app.sessionCookieName = 'nmnsdh_session'
+app.sessionExpiration = 7200
+#app.sessionSavePath = NULL
+app.sessionMatchIP = false
+app.sessionTimeToUpdate = 300
+app.sessionRegenerateDestroy = false
+
 #--------------------------------------------------------------------
 # DATABASE
 #--------------------------------------------------------------------
+
+database.default.hostname = 127.0.0.1
+database.default.database = atvn
+database.default.username = root
+database.default.password = password
+database.default.DBDriver = MySQLi
+database.default.DBPrefix =
 
 # database.default.hostname = localhost
 # database.default.database = ci4
