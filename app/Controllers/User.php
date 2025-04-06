@@ -67,6 +67,92 @@ class User extends BaseController
         // Chuyển hướng về trang login
         return redirect()->to(site_url('user/login'));
     }    
+
+
+    /**
+     * Hiển thị trang chỉnh sửa thông tin user.
+     * Nếu $id không được truyền vào thì chỉnh sửa thông tin của người dùng hiện tại.
+     */
+    public function getEdit($id = null)
+    {
+        // Nếu không truyền id, chỉnh sửa thông tin của user hiện tại
+        if ($id === null) {
+            $id = $this->session->userId;
+        }
+        
+        $user = $this->userModel->find($id);
+        if (!$user) {
+            $this->session->setFlashdata('error', 'User không tồn tại.');
+            return redirect()->to(site_url('user'));
+        }
+        
+        // Gán các giá trị cần thiết vào view
+        $this->assign('id', $user['id']);
+        $this->assign('username', $user['username']);
+        $this->assign('fullname', $user['fullname']);
+        // Bạn có thể gán thêm các trường khác nếu cần
+        
+        // Lấy flashdata (nếu có) và assign vào view theo chuẩn parser
+        $error = $this->session->getFlashdata('error');
+        if (empty($error)) {
+            $this->assign('error', []);
+        } else {
+            $this->assign('error', [['mess' => $error]]);
+        }
+        
+        $success = $this->session->getFlashdata('success');
+        if (empty($success)) {
+            $this->assign('success', []);
+        } else {
+            $this->assign('success', [['mess' => $success]]);
+        }
+        
+        return $this->render();
+    }
+    
+    /**
+     * Xử lý cập nhật thông tin user sau khi chỉnh sửa.
+     * Nếu $id không truyền vào thì cập nhật thông tin của người dùng hiện tại.
+     */
+    public function postEdit($id = null)
+    {
+        if ($id === null) {
+            $id = $this->session->userId;
+        }
+        
+        // Lấy dữ liệu cơ bản từ form
+        $data = [
+            // 'username' => $this->request->getPost('username'),
+            'fullname' => $this->request->getPost('fullname'),
+        ];
+        
+        $password = $this->request->getPost('password');
+        $confirm_password = $this->request->getPost('confirm_password');
+        
+        // Nếu người dùng nhập mật khẩu mới, kiểm tra quy tắc
+        if (!empty($password)) {
+            // Kiểm tra mật khẩu có ít nhất 8 ký tự, chứa chữ hoa, chữ thường và ít nhất một ký tự đặc biệt
+            if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{8,}$/', $password)) {
+                $this->session->setFlashdata('error', 'Mật khẩu phải có ít nhất 8 ký tự, chứa chữ hoa, chữ thường và ít nhất một ký tự đặc biệt.');
+                return redirect()->to(site_url("user/edit/{$id}"));
+            }
+            // Kiểm tra xác nhận mật khẩu
+            if ($password !== $confirm_password) {
+                $this->session->setFlashdata('error', 'Mật khẩu xác nhận không khớp.');
+                return redirect()->to(site_url("user/edit/{$id}"));
+            }
+            $data['password'] = $password; // Sẽ được BaseModel hash qua beforeUpdate
+        }
+        
+        if ($this->userModel->update($id, $data)) {
+            $this->session->setFlashdata('success', 'Thông tin user đã được cập nhật.');
+        } else {
+            $this->session->setFlashdata('error', 'Cập nhật thông tin user thất bại.');
+        }
+        
+        return redirect()->to(site_url("user/edit/{$id}"));
+    }
+     
     
     /**
      * Hiển thị trang báo lỗi.

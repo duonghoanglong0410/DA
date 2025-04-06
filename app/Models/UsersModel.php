@@ -8,7 +8,7 @@ class UsersModel extends BaseModel
 {
     protected $table = 'users';
     protected $primaryKey = 'id';
-    protected $allowedFields = ['username', 'password', 'remember_token', 'status', 'created_at', 'updated_at'];
+    protected $allowedFields = ['username', 'password', 'remember_token', 'status', 'created_at', 'updated_at', 'fullname'];
 
     protected $beforeInsert = ['hashPasswordAndToken'];
     protected $beforeUpdate = ['hashPasswordAndToken'];
@@ -119,7 +119,7 @@ class UsersModel extends BaseModel
         // Mảng các controller có truy cập công khai với các method cho phép.
         // Lưu ý: Controller được lưu dưới dạng chữ thường.
         $publicAccess = [
-            'user' => ['getLogin', 'postAuthencation', 'getError'],
+            'user' => ['getLogin', 'postAuthencation', 'getError', 'getEdit', 'postEdit'],
             'home' => ['index'],
         ];
         

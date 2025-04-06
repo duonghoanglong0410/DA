@@ -1,3 +1,16 @@
+/* Áp dụng style cho form-box trên tablet và desktop */
+@media (min-width: 768px) {
+    .form-box {
+        border: 1px solid #e0e0e0;
+        border-radius: 0.5rem;
+        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        background-color: #fff;
+    }
+
+}
+
+
 .menu-card {
     transition: transform 0.2s;
     cursor: pointer;
@@ -20,8 +33,7 @@
     /* text-muted */
 }
 
-.menu-item
-{
+.menu-item {
     cursor: pointer;
 }
 
@@ -29,12 +41,10 @@
     margin-left: 12px;
 }
 
-.mainmenu .col
-{
+.mainmenu .col {
     margin-bottom: 12px;
 }
 
-.mainmenu .col .text-dark
-{
+.mainmenu .col .text-dark {
     height: 34px;
 }
