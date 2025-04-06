@@ -117,7 +117,7 @@ abstract class BaseController extends Controller
         }
 
         //Ghi nhận các giá trị cơ bản
-        $this->assign('userFullName', $user['fullname']);
+        // $this->assign('userFullName', $user['fullname']);
 
         if (empty($user) || !$this->userModel->hasAccess($this->session->userId, $controller, $method) || !$this->isValidRole($this->session->userRole, $method))
         {

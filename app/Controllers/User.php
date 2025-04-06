@@ -53,12 +53,35 @@ class User extends BaseController
             return redirect()->to('/user/login');
         }
     }
+
+    public function getLogout()
+    {
+        // Lấy userId từ session
+        $userId = $this->session->userId;
+        if ($userId) {
+            // Gọi hàm logout của model để xoá remember_token khỏi DB và xoá cookie
+            $this->userModel->logout($userId);
+            // Xoá userId khỏi session
+            $this->session->remove('userId');
+        }
+        // Chuyển hướng về trang login
+        return redirect()->to(site_url('user/login'));
+    }    
     
     /**
      * Hiển thị trang báo lỗi.
      */
-    public function getError()
+    public function getError($mid = '')
     {
+        switch ($mid) {
+            case 'i001':
+                $this->assign('mtitle', 'Không thể in phiếu xuất');
+                $this->assign('message', '<p>Hệ thống chỉ hỗ trợ in phiếu xuất kho cho các đơn hàng được tạo từ báo giá.</p><p>Đơn hàng này được tạo thủ công từ trang quản lý giao vận nên không đủ thông tin để lập phiếu xuất.</p>');
+                break;
+            default:
+                $this->assign('mtitle', 'OPPSSS!!!! Rất tiếc...');
+                $this->assign('message', 'Bạn không đủ quyền để thực hiện chức năng này. Nếu bạn cho rằng đây là một sự nhầm lẫn, xin vui lòng liên hệ với nhân viên quản lý trực tiếp để được hướng dẫn.');
+        }
         return $this->render();
     }
 }

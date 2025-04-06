@@ -116,6 +116,18 @@ class UsersModel extends BaseModel
      */
     public function hasAccess($userId, $controller, $method)
     {
+        // Mảng các controller có truy cập công khai với các method cho phép.
+        // Lưu ý: Controller được lưu dưới dạng chữ thường.
+        $publicAccess = [
+            'user' => ['getLogin', 'postAuthencation', 'getError']
+        ];
+        
+        // Kiểm tra nếu controller và method nằm trong danh sách public access
+        $controllerLower = strtolower($controller);
+        if (isset($publicAccess[$controllerLower]) && in_array($method, $publicAccess[$controllerLower])) {
+            return true;
+        }
+
         $db = \Config\Database::connect();
         $builder = $db->table('user_role_assignments');
         $builder->select('permissions.id');
