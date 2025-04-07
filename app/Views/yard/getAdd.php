@@ -3,7 +3,7 @@
     <div class="col-12 col-md-8 col-lg-6">
       <div class="form-box">
         <h2 class="mb-4">Thêm Kho Bãi</h2>
-        <form action="{site_url}yard/postAdd" method="post" class="getDetail">
+        <form action="{site_url}yard/add" method="post" class="getDetail">
           <div class="mb-3">
             <label for="yard_code" class="form-label">Mã Kho</label>
             <input type="text" name="yard_code" id="yard_code" class="form-control" value="{yard_code}" required>
@@ -27,8 +27,8 @@
           <h5 class="mb-3">Chọn các loại tiền tệ sử dụng</h5>
           {currencies}
           <div class="form-check mb-2">
-            <input type="checkbox" class="form-check-input" name="currency_active[{id}]" value="1">
-            <label class="form-check-label">{name} ({abbreviation})</label>
+            <input type="checkbox" class="form-check-input" name="currency_active[{id}]" id="currency_active_{id}" value="1">
+            <label class="form-check-label" for="currency_active_{id}">{name} ({abbreviation})</label>
             <!-- Quỹ tiền kho bãi chỉ cho phép bật/tắt, số dư luôn là 0 -->
             <input type="hidden" name="balance[{id}]" value="0">
           </div>

@@ -3,7 +3,7 @@
     <div class="col-12 col-md-8 col-lg-6">
       <div class="form-box">
         <h2 class="mb-4">Sửa Kho Bãi</h2>
-        <form action="{site_url}yard/postEdit/{yard_id}" method="post" class="getDetail">
+        <form action="{site_url}yard/edit/{yard_id}" method="post" class="getDetail">
           <div class="mb-3">
             <label for="yard_code" class="form-label">Mã Kho</label>
             <input type="text" name="yard_code" id="yard_code" class="form-control" value="{yard_code}" required>
@@ -27,10 +27,18 @@
           <h5 class="mb-3">Chọn các loại tiền tệ sử dụng</h5>
           {currencies}
           <div class="form-check mb-2">
-            <input type="checkbox" class="form-check-input" name="currency_active[{id}]" value="1" {active}>
-            <label class="form-check-label">{name} ({abbreviation})</label>
+            <input type="checkbox" class="form-check-input" name="currency_active[{id}]" id="currency_active_{id}" value="1" {active}>
+            <label class="form-check-label" for="currency_active_{id}">{name} ({abbreviation})</label>
+            <!-- {balance_input} chứa HTML hidden input nếu quỹ tiền đang bật -->
+            {balance_input}
           </div>
           {/currencies}
           <div class="mt-4">
             <button type="submit" class="btn btn-primary">Cập nhật</button>
             <button type="button" class="btn btn-secondary" onclick="window.history.back();">Trở lại</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
