@@ -141,9 +141,10 @@ class User extends BaseController
         
         // Nếu người dùng nhập mật khẩu mới, kiểm tra quy tắc
         if (!empty($password)) {
-            // Kiểm tra mật khẩu có ít nhất 8 ký tự, chứa chữ hoa, chữ thường và ít nhất một ký tự đặc biệt
-            if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{8,}$/', $password)) {
-                $this->session->setFlashdata('error', 'Mật khẩu phải có ít nhất 8 ký tự, chứa chữ hoa, chữ thường và ít nhất một ký tự đặc biệt.');
+            
+            $check = $this->userModel->verifyPasswordPolicy($password);
+            if ($check !== false) {
+                $this->session->setFlashdata('error', $check);
                 return redirect()->to(site_url("user/edit/{$id}"));
             }
             // Kiểm tra xác nhận mật khẩu

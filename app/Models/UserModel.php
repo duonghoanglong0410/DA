@@ -5,7 +5,7 @@ namespace App\Models;
 use App\Constants\Roles;
 use App\Models\BaseModel;
 
-class UsersModel extends BaseModel
+class UserModel extends BaseModel
 {
     protected $table = 'users';
     protected $primaryKey = 'id';
@@ -13,6 +13,17 @@ class UsersModel extends BaseModel
 
     protected $beforeInsert = ['hashPasswordAndToken'];
     protected $beforeUpdate = ['hashPasswordAndToken'];
+
+    public function verifyPasswordPolicy($password)
+    {
+        // Kiểm tra độ phức tạp của mật khẩu: ít nhất 8 ký tự, chứa chữ hoa, chữ thường, số và ít nhất 1 ký tự đặc biệt
+        $regex = '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/';
+        if (!preg_match($regex, $password)) {
+            return 'Mật khẩu phải có ít nhất 8 ký tự, chứa chữ hoa, chữ thường, số và ít nhất 1 ký tự đặc biệt.';
+        }
+
+        return false;
+    }
 
     private function hashAString($str)
     {
@@ -55,7 +66,7 @@ class UsersModel extends BaseModel
     public function authenticate($username, $password, $remember_token = null)
     {
         $user = $this->findOneByUsername($username);
-        if (!$user) {
+        if (!$user || empty($user['status'])) {
             return false;
         }
         if (!password_verify($password, base64_decode($user['password']))) {

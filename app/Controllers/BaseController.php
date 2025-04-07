@@ -8,7 +8,7 @@ use CodeIgniter\HTTP\IncomingRequest;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Psr\Log\LoggerInterface;
-use App\Models\UsersModel;
+use App\Models\UserModel;
 use App\Models\SettingsModel;
 
 /**
@@ -92,7 +92,7 @@ abstract class BaseController extends Controller
         $router          = service('router');
         $controller      = strtolower(class_basename($this));
         $method          = $router->methodName();
-        $this->userModel = new UsersModel();
+        $this->userModel = new UserModel();
 
         //gắn các biến cơ bản ra view parser
         $this->initFlashData();
