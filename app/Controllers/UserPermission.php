@@ -6,6 +6,8 @@ use App\Models\UsersModel;
 use App\Models\RolesModel;
 use App\Models\UserRoleAssignmentsModel;
 use App\Models\PurchaseYardsModel;
+use App\Models\CashFundsModel; // Giả sử bạn đã tạo model này
+use App\Constants\Roles; // Nếu cần dùng các hằng số cho role
 
 class UserPermission extends BaseController
 {
@@ -13,16 +15,17 @@ class UserPermission extends BaseController
     protected $roleModel;
     protected $userRoleModel;
     protected $purchaseYardsModel;
+    protected $cashFundsModel;
 
-    protected function isValidRole($role, $method)
+    protected function isValidRole($role, $method, $segments)
     {
         return true;
         // return $this->userModel->hasRole($this->session->userId, Roles::SYSTEM_MANAGER);
     }        
 
-
-    public function initController(\CodeIgniter\HTTP\RequestInterface $request,
-                                   \CodeIgniter\HTTP\ResponseInterface $response,
+    
+    public function initController(\CodeIgniter\HTTP\RequestInterface $request, 
+                                   \CodeIgniter\HTTP\ResponseInterface $response, 
                                    \Psr\Log\LoggerInterface $logger)
     {
         parent::initController($request, $response, $logger);
@@ -30,11 +33,12 @@ class UserPermission extends BaseController
         $this->roleModel = new RolesModel();
         $this->userRoleModel = new UserRoleAssignmentsModel();
         $this->purchaseYardsModel = new PurchaseYardsModel();
+        $this->cashFundsModel = new CashFundsModel();
     }
-
+    
     /**
      * Hiển thị trang chỉnh sửa phân quyền cho một user.
-     * Nếu $userId không truyền vào, sử dụng user hiện tại từ session.
+     * Nếu không truyền userId thì sử dụng userId hiện tại từ session.
      */
     public function getEdit($userId = null)
     {
@@ -47,98 +51,129 @@ class UserPermission extends BaseController
             return redirect()->to("{site_url}user-permission");
         }
         
-        // Lấy tất cả các role
+        // Lấy tất cả role
         $roles = $this->roleModel->findAll();
-        // Lấy danh sách role đã gán cho user
+        // Lấy danh sách phân quyền đã gán cho user (user_role_assignments)
         $userAssignments = $this->userRoleModel->where('user_id', $userId)->findAll();
-        // Mapping: role_id => purchase_yard_id (có thể là null)
+        // Tạo mapping: role_id => array các target (purchase_yard_id hoặc cash_fund_id)
         $assignedRoles = [];
         foreach ($userAssignments as $ua) {
-            $assignedRoles[$ua['role_id']] = $ua['purchase_yard_id'];
+            $rid = $ua['role_id'];
+            if (!isset($assignedRoles[$rid])) {
+                $assignedRoles[$rid] = [];
+            }
+            // Dùng cột purchase_yard_id để lưu target cho cả target_type 1 và 2
+            if (!empty($ua['purchase_yard_id'])) {
+                $assignedRoles[$rid][] = $ua['purchase_yard_id'];
+            }
         }
         
-        // Lấy danh sách bãi thu mua
+        // Lấy danh sách bãi thu mua và quỹ tiền tệ
         $purchaseYards = $this->purchaseYardsModel->findAll();
+        $cashFunds     = $this->cashFundsModel->findAll();
         
-        // Xử lý dữ liệu để tạo mảng flatRoles dùng trong view (không dùng if phức tạp trong view)
-        $flatRoles = [];
+        // Tạo mảng flatRoles: mỗi phần tử chứa các trường đơn để view có thể sử dụng
+        $group1 = []; // target_type = 1 (theo bãi)
+        $group2 = []; // target_type = 2 (quỹ tiền)
+        $group3 = []; // target_type = 0 (chức năng chung)
+        
         foreach ($roles as $role) {
             $roleData = [];
-            $roleData['id']   = $role['id'];
+            $roleData['id'] = $role['id'];
             $roleData['name'] = $role['name'];
-            $roleData['target_type'] = $role['target_type']; // "1" nếu phân theo bãi, "0" nếu không
-            // Nếu role đã được gán, đánh dấu checkbox
-            if (isset($assignedRoles[$role['id']]) && !empty($assignedRoles[$role['id']])) {
-                $roleData['checked'] = 'checked="checked"';
-                $selected = $assignedRoles[$role['id']];
-            } else {
-                $roleData['checked'] = '';
-                $selected = '';
-            }
-            // Nếu role có target_type = 1, xây dựng HTML dropdown chọn bãi
+            $roleData['target_type'] = $role['target_type']; // 1,2 hoặc 0
+            // Checkbox được đánh dấu nếu có bất kỳ target nào được gán
+            $roleData['checked'] = (isset($assignedRoles[$role['id']]) && count($assignedRoles[$role['id']]) > 0) ? 'checked="checked"' : '';
+            
+            // Xây dựng dropdown tùy thuộc vào target_type
             if ((int)$role['target_type'] === 1) {
-                $dropdown = '<div class="form-group mt-1 ms-4">';
-                $dropdown .= '<label for="purchase_yard_' . $role['id'] . '">Chọn bãi cho ' . $role['name'] . ':</label>';
-                $dropdown .= '<select class="form-control" name="purchase_yard_' . $role['id'] . '" id="purchase_yard_' . $role['id'] . '">';
-                $dropdown .= '<option value="">-- Chọn bãi --</option>';
+                // Dropdown cho purchase yards - cho phép chọn nhiều (multi-select)
+                $options = '';
                 foreach ($purchaseYards as $py) {
-                    $dropdown .= '<option value="' . $py['id'] . '"';
-                    if ($selected == $py['id']) {
-                        $dropdown .= ' selected';
-                    }
-                    $dropdown .= '>' . $py['yard_name'] . '</option>';
+                    $selected = (isset($assignedRoles[$role['id']]) && in_array($py['id'], $assignedRoles[$role['id']])) ? ' selected' : '';
+                    $options .= '<option value="' . $py['id'] . '"' . $selected . '>' . $py['yard_name'] . '</option>';
                 }
-                $dropdown .= '</select></div>';
+                $dropdown = '<select class="form-control" name="target_' . $role['id'] . '[]" id="target_' . $role['id'] . '" multiple>';
+                $dropdown .= $options;
+                $dropdown .= '</select>';
+                $roleData['dropdown'] = $dropdown;
+            } elseif ((int)$role['target_type'] === 2) {
+                // Dropdown cho cash funds
+                $options = '';
+                foreach ($cashFunds as $cf) {
+                    $selected = (isset($assignedRoles[$role['id']]) && in_array($cf['id'], $assignedRoles[$role['id']])) ? ' selected' : '';
+                    $options .= '<option value="' . $cf['id'] . '"' . $selected . '>' . $cf['fund_name'] . '</option>';
+                }
+                $dropdown = '<select class="form-control" name="target_' . $role['id'] . '[]" id="target_' . $role['id'] . '" multiple>';
+                $dropdown .= $options;
+                $dropdown .= '</select>';
                 $roleData['dropdown'] = $dropdown;
             } else {
                 $roleData['dropdown'] = '';
             }
-            $flatRoles[] = $roleData;
+            
+            // Phân nhóm theo target_type
+            if ((int)$role['target_type'] === 1) {
+                $group1[] = $roleData;
+            } elseif ((int)$role['target_type'] === 2) {
+                $group2[] = $roleData;
+            } else {
+                $group3[] = $roleData;
+            }
         }
         
         // Assign các biến đơn cho view
         $this->assign('user_id', $user['id']);
         $this->assign('user_username', $user['username']);
-        $this->assign('flatRoles', $flatRoles);
-        // Cũng assign danh sách bãi thu mua để dùng nếu cần (đã dùng trong controller để build dropdown)
-        $this->assign('purchaseYards', $purchaseYards);
+        // Assign các group role đã xử lý
+        $this->assign('group1', $group1);
+        $this->assign('group2', $group2);
+        $this->assign('group3', $group3);
         
         return $this->render();
     }
-
+    
     /**
      * Cập nhật phân quyền của user dựa trên dữ liệu gửi từ form.
-     * Nếu role có target_type = 1, bắt buộc phải chọn bãi.
+     * Với role có target_type = 1 hoặc 2, bắt buộc phải chọn ít nhất một target.
      */
     public function postEdit($userId = null)
     {
         if ($userId === null) {
             $userId = $this->session->userId;
         }
-        $selectedRoles = $this->request->getPost('roles'); // Mảng role_id
-        // Xoá tất cả phân quyền của user
+        // Lấy danh sách role được chọn từ form (checkbox "roles[]")
+        $selectedRoles = $this->request->getPost('roles'); // mảng role_id
+        
+        // Xoá tất cả phân quyền hiện có của user
         $this->userRoleModel->where('user_id', $userId)->delete();
         
-        // Với mỗi role được chọn, insert vào bảng user_role_assignments.
+        // Nếu có role được chọn, xử lý từng role
         if (!empty($selectedRoles) && is_array($selectedRoles)) {
             foreach ($selectedRoles as $roleId) {
                 $data = [
                     'user_id' => $userId,
                     'role_id' => $roleId,
-                    'purchase_yard_id' => null
+                    'purchase_yard_id' => null, // dùng chung cột cho target
                 ];
-                // Nếu role có target_type = 1, giá trị bãi được gửi từ form với tên "purchase_yard_{roleId}"
-                // Lấy dữ liệu từ POST:
+                // Lấy thông tin role để xác định target_type
                 $role = $this->roleModel->find($roleId);
-                if ($role && (int)$role['target_type'] === 1) {
-                    $py = $this->request->getPost("purchase_yard_{$roleId}");
-                    if (empty($py)) {
-                        $this->session->setFlashdata('error', 'Vui lòng chọn bãi cho role có phân theo bãi.');
+                if ($role && ((int)$role['target_type'] === 1 || (int)$role['target_type'] === 2)) {
+                    // Lấy các target được chọn từ form với field name "target_{roleId}[]"
+                    $targets = $this->request->getPost("target_{$roleId}");
+                    if (empty($targets) || !is_array($targets) || count($targets) < 1) {
+                        $this->session->setFlashdata('error', 'Vui lòng chọn ít nhất một mục cho role: ' . $role['name']);
                         return redirect()->to("{site_url}user-permission/edit/{$userId}");
                     }
-                    $data['purchase_yard_id'] = $py;
+                    // Với mỗi target, insert một record
+                    foreach ($targets as $target) {
+                        $data['purchase_yard_id'] = $target;
+                        $this->userRoleModel->insert($data);
+                    }
+                } else {
+                    // Với role không có target, chỉ insert một record
+                    $this->userRoleModel->insert($data);
                 }
-                $this->userRoleModel->insert($data);
             }
         }
         

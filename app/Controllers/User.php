@@ -6,7 +6,7 @@ use App\Constants\Roles;
 
 class User extends BaseController
 {
-    protected function isValidRole($role, $method)
+    protected function isValidRole($role, $method, $segments)
     {
         return true;
     }

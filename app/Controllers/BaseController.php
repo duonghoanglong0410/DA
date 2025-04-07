@@ -48,7 +48,7 @@ abstract class BaseController extends Controller
     protected $defaultGlobalMess = true; 
 
 
-    abstract protected function isValidRole($role, $method);
+    abstract protected function isValidRole($role, $method, $segments);
     /**
      * @return void
      */
@@ -122,7 +122,11 @@ abstract class BaseController extends Controller
         //Ghi nhận các giá trị cơ bản
         $this->assign('userFullName', $user['fullname']);
 
-        if (empty($user) || !$this->userModel->hasAccess($this->session->userId, $controller, $method) || !$this->isValidRole($this->session->userRole, $method))
+        if (
+            empty($user) 
+            || !$this->userModel->hasAccess($this->session->userId, $controller, $method) 
+            || !$this->isValidRole($this->session->userRole, $method, $request->getUri()->getSegments())
+            )
         {
             if (ENVIRONMENT === 'development') {
                 $this->session->setFlashdata('error', "Truy cập đến controller <b>$controller</b> method <b>$method</b> bị chặn, hãy kiểm tra phân quyền hoặc xem xét table <b>permissions</b> cột <b>action</b> và </b>method</b>");

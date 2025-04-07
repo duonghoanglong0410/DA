@@ -12,7 +12,7 @@ class Purchase extends BaseController
      * @param string $method
      * @return bool
      */
-    protected function isValidRole($role, $method)
+    protected function isValidRole($role, $method, $segments)
     {
         return true;
     }
