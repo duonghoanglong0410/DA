@@ -11,6 +11,11 @@
 }
 
 
+.text-end {
+    text-align: right !important;
+}
+
+
 .menu-card {
     transition: transform 0.2s;
     cursor: pointer;

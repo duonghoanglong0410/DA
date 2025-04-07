@@ -9,17 +9,17 @@
         <table class="table table-bordered">
           <thead>
             <tr>
-              <th>Tên tiền tệ</th>
-              <th>Viết tắt</th>
-              <th>Số dư</th>
+              <th class="text-center">Tên tiền tệ</th>
+              <th class="text-center">Viết tắt</th>
+              <th class="text-center">Số dư</th>
             </tr>
           </thead>
           <tbody>
             {cfCurrencies}
             <tr>
               <td>{currency_name}</td>
-              <td>{abbreviation}</td>
-              <td>{balance}</td>
+              <td class="text-center">{abbreviation}</td>
+              <td class="text-end">{balance}</td>
             </tr>
             {/cfCurrencies}
           </tbody>

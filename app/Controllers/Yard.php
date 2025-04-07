@@ -79,15 +79,17 @@ class Yard extends BaseController
             $this->session->setFlashdata('error', 'Kho bãi không tồn tại.');
             return redirect()->to("yard");
         }
-        // Assign các biến đơn để view hiển thị (không dùng {yard.yard_name})
+        // Assign các biến đơn cho view
         $this->assign('yard_id', $yard['id']);
         $this->assign('yard_code', $yard['yard_code']);
         $this->assign('yard_name', $yard['yard_name']);
         $this->assign('client_api_key', $yard['client_api_key']);
-        $this->assign('status', $yard['status']);
+        // Xử lý checkbox trạng thái: nếu status == 1, biến status_enabled = "checked", ngược lại rỗng.
+        $this->assign('status_enabled', ($yard['status'] == 1) ? 'checked' : '');
         
-        return $this->render(); // Tự động load view: app/Views/yard/getEdit.php
+        return $this->render();
     }
+    
     
     /**
      * Xử lý cập nhật kho bãi.

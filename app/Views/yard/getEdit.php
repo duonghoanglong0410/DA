@@ -17,7 +17,7 @@
             <input type="text" class="form-control" id="client_api_key" name="client_api_key" value="{client_api_key}">
           </div>
           <div class="form-check mt-3">
-            <input class="form-check-input" type="checkbox" id="status" name="status" value="1" {if status == "1"}checked{/if}>
+            <input class="form-check-input" type="checkbox" id="status" name="status" value="1" {status_enabled}>
             <label class="form-check-label" for="status">Hoạt động</label>
           </div>
           <div class="mt-3 d-flex justify-content-between">

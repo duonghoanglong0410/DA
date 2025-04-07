@@ -11,20 +11,34 @@ class CashFundCurrenciesModel extends BaseModel
     protected $allowedFields = [
         'cash_fund_id', 
         'currency_id', 
-        'balance', 
+        'balance',      
         'created_at', 
         'updated_at'
     ];
     
     /**
-     * Lấy thông tin tiền tệ của quỹ (cash fund) cùng với dữ liệu từ bảng currencies.
+     * Kiểm tra xem bản ghi cash_fund_currency có được tham chiếu trong bảng cash_vouchers hay không.
+     *
+     * @param int $cfId ID của cash_fund_currencies
+     * @return bool True nếu có tham chiếu, False nếu không.
+     */
+    public function isReferenced($cfId)
+    {
+        $builder = $this->db->table('cash_vouchers');
+        $builder->where('sending_currency_fund_id', $cfId);
+        $builder->orWhere('receiving_currency_fund_id', $cfId);
+        $count = $builder->countAllResults();
+        return ($count > 0);
+    }
+    
+    /**
+     * Lấy thông tin tiền tệ của quỹ, kèm dữ liệu từ bảng currencies.
      *
      * @param int $cashFundId
-     * @return array Danh sách bản ghi với các trường: balance, currency_name, abbreviation, symbol, currency_id, ...
+     * @return array
      */
     public function getFundCurrencies($cashFundId)
     {
-        // Sử dụng query builder trong model (được phép trong model)
         $builder = $this->db->table($this->table . ' as cfc');
         $builder->select('cfc.*, c.name as currency_name, c.abbreviation, c.symbol');
         $builder->join('currencies as c', 'c.id = cfc.currency_id', 'left');

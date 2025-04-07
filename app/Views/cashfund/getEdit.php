@@ -16,7 +16,7 @@
           {currencies}
           <div class="form-group mt-2">
             <div class="form-check form-switch">
-              <input class="form-check-input" type="checkbox" id="currency_{id}" name="currency_{id}" {if enabled}checked{/if}>
+              <input class="form-check-input" type="checkbox" id="currency_{id}" name="currency_{id}" {enabled}>
               <label class="form-check-label" for="currency_{id}">{name} ({abbreviation})</label>
             </div>
           </div>
