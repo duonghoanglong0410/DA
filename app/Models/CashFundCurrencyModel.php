@@ -4,7 +4,7 @@ namespace App\Models;
 
 use App\Models\BaseModel;
 
-class CashFundCurrenciesModel extends BaseModel
+class CashFundCurrencyModel extends BaseModel
 {
     protected $table = 'cash_fund_currencies';
     protected $primaryKey = 'id';

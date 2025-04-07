@@ -5,7 +5,7 @@ namespace App\Controllers;
 use App\Models\UsersModel;
 use App\Models\RolesModel;
 use App\Models\UserRoleAssignmentsModel;
-use App\Models\PurchaseYardsModel;
+use App\Models\PurchaseYardModel;
 use App\Models\CashFundsModel; // Giả sử bạn đã tạo model này
 use App\Constants\Roles; // Nếu cần dùng các hằng số cho role
 
@@ -14,7 +14,7 @@ class UserPermission extends BaseController
     protected $userModel;
     protected $roleModel;
     protected $userRoleModel;
-    protected $purchaseYardsModel;
+    protected $purchaseYardModel;
     protected $cashFundsModel;
 
     protected function isValidRole($role, $method, $segments)
@@ -32,7 +32,7 @@ class UserPermission extends BaseController
         $this->userModel = new UsersModel();
         $this->roleModel = new RolesModel();
         $this->userRoleModel = new UserRoleAssignmentsModel();
-        $this->purchaseYardsModel = new PurchaseYardsModel();
+        $this->purchaseYardModel = new purchaseYardModel();
         $this->cashFundsModel = new CashFundsModel();
     }
     
@@ -68,7 +68,7 @@ class UserPermission extends BaseController
         }
         
         // Lấy danh sách purchase yards và cash funds
-        $purchaseYards = $this->purchaseYardsModel->findAll();
+        $purchaseYards = $this->purchaseYardModel->findAll();
         $cashFunds     = $this->cashFundsModel->findAll();
         
         // Tạo các mảng nhóm role

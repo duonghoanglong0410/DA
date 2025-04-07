@@ -4,7 +4,7 @@ namespace App\Models;
 
 use App\Models\BaseModel;
 
-class PurchaseYardsModel extends BaseModel
+class PurchaseYardModel extends BaseModel
 {
     protected $table = 'purchase_yards';
     protected $primaryKey = 'id';

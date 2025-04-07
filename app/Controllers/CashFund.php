@@ -3,14 +3,14 @@
 namespace App\Controllers;
 
 use App\Models\CashFundsModel;
-use App\Models\CashFundCurrenciesModel;
-use App\Models\CurrenciesModel;
+use App\Models\CashFundCurrencyModel;
+use App\Models\CurrencyModel;
 
 class CashFund extends BaseController
 {
     protected $cashFundsModel;
-    protected $cashFundCurrenciesModel;
-    protected $currenciesModel;
+    protected $cashFundCurrencyModel;
+    protected $currencyModel;
     
     public function initController(\CodeIgniter\HTTP\RequestInterface $request, 
                                    \CodeIgniter\HTTP\ResponseInterface $response, 
@@ -18,8 +18,8 @@ class CashFund extends BaseController
     {
         parent::initController($request, $response, $logger);
         $this->cashFundsModel = new CashFundsModel();
-        $this->cashFundCurrenciesModel = new CashFundCurrenciesModel();
-        $this->currenciesModel = new CurrenciesModel();
+        $this->cashFundCurrencyModel = new CashFundCurrencyModel();
+        $this->currencyModel = new CurrencyModel();
     }
     
     /**
@@ -46,7 +46,7 @@ class CashFund extends BaseController
      */
     public function getAdd()
     {
-        $currencies = $this->currenciesModel->findAll();
+        $currencies = $this->currencyModel->findAll();
         // Với form thêm mới, mặc định không có loại tiền nào được kích hoạt.
         foreach ($currencies as &$cur) {
             $cur['enabled'] = false;
@@ -68,7 +68,7 @@ class CashFund extends BaseController
         $fundId = $this->cashFundsModel->insert($data);
         
         if ($fundId) {
-            $currencies = $this->currenciesModel->findAll();
+            $currencies = $this->currencyModel->findAll();
             foreach ($currencies as $currency) {
                 // Nếu checkbox được chọn, field "currency_{id}" sẽ có giá trị (ví dụ: "on")
                 if ($this->request->getPost('currency_' . $currency['id'])) {
@@ -77,7 +77,7 @@ class CashFund extends BaseController
                         'currency_id'  => $currency['id'],
                         'balance'      => 0, // Balance mặc định là 0
                     ];
-                    $this->cashFundCurrenciesModel->insert($cfData);
+                    $this->cashFundCurrencyModel->insert($cfData);
                 }
             }
             $this->session->setFlashdata('success', 'Quỹ tiền đã được thêm mới.');
@@ -99,13 +99,13 @@ class CashFund extends BaseController
             return redirect()->to("cash-fund");
         }
         // Lấy dữ liệu cash_fund_currencies của quỹ này thông qua model
-        $cfCurrencies = $this->cashFundCurrenciesModel->getFundCurrencies($id);
+        $cfCurrencies = $this->cashFundCurrencyModel->getFundCurrencies($id);
         // Tạo mapping: currency_id => balance
         $balanceMapping = [];
         foreach ($cfCurrencies as $record) {
             $balanceMapping[$record['currency_id']] = $record['balance'];
         }
-        $currencies = $this->currenciesModel->findAll();
+        $currencies = $this->currencyModel->findAll();
         $currencyList = [];
         foreach ($currencies as $cur) {
             $cur['enabled'] = isset($balanceMapping[$cur['id']]) ? 'checked' : '';
@@ -136,18 +136,18 @@ class CashFund extends BaseController
         }
         
         // Lấy danh sách currencies để kiểm tra các bản ghi cash_fund_currencies hiện có
-        $currencies = $this->currenciesModel->findAll();
+        $currencies = $this->currencyModel->findAll();
         // Lấy các bản ghi cash_fund_currencies hiện có của quỹ này
-        $existingRecords = $this->cashFundCurrenciesModel->where('cash_fund_id', $id)->findAll();
+        $existingRecords = $this->cashFundCurrencyModel->where('cash_fund_id', $id)->findAll();
         
         // Với mỗi bản ghi hiện có, nếu người dùng không chọn loại tiền đó trong form thì kiểm tra điều kiện
         foreach ($existingRecords as $record) {
             $currencyId = $record['currency_id'];
             if (!$this->request->getPost('currency_' . $currencyId)) {
                 // Người dùng muốn xoá loại tiền này, kiểm tra balance và tham chiếu trong cash_vouchers
-                if (floatval($record['balance']) != 0 || $this->cashFundCurrenciesModel->isReferenced($record['id'])) {
+                if (floatval($record['balance']) != 0 || $this->cashFundCurrencyModel->isReferenced($record['id'])) {
                     // Lấy thông tin currency để báo lỗi
-                    $currency = $this->currenciesModel->find($currencyId);
+                    $currency = $this->currencyModel->find($currencyId);
                     $this->session->setFlashdata('error', 'Đơn vị tiền tệ ' . $currency['name'] . ' của quỹ này đã có giao dịch nên không thể xoá.');
                     return redirect()->to("cash-fund/edit/{$id}");
                 }
@@ -155,7 +155,7 @@ class CashFund extends BaseController
         }
         
         // Xoá các bản ghi cũ
-        $this->cashFundCurrenciesModel->where('cash_fund_id', $id)->delete();
+        $this->cashFundCurrencyModel->where('cash_fund_id', $id)->delete();
         
         // Lặp qua danh sách currencies; nếu người dùng chọn loại tiền đó (checkbox được tích) thì insert record
         foreach ($currencies as $currency) {
@@ -165,7 +165,7 @@ class CashFund extends BaseController
                     'currency_id'  => $currency['id'],
                     'balance'      => 0,
                 ];
-                $this->cashFundCurrenciesModel->insert($cfData);
+                $this->cashFundCurrencyModel->insert($cfData);
             }
         }
         
@@ -187,13 +187,13 @@ class CashFund extends BaseController
         }
         
         // Lấy tất cả các dòng cash_fund_currencies của quỹ này
-        $cfRecords = $this->cashFundCurrenciesModel->where('cash_fund_id', $id)->findAll();
+        $cfRecords = $this->cashFundCurrencyModel->where('cash_fund_id', $id)->findAll();
         
         // Kiểm tra từng dòng xem có thỏa điều kiện xóa hay không
         foreach ($cfRecords as $record) {
-            if (floatval($record['balance']) != 0 || $this->cashFundCurrenciesModel->isReferenced($record['id'])) {
+            if (floatval($record['balance']) != 0 || $this->cashFundCurrencyModel->isReferenced($record['id'])) {
                 // Lấy thông tin đơn vị tiền tệ từ currencies để hiển thị tên
-                $currency = $this->currenciesModel->find($record['currency_id']);
+                $currency = $this->currencyModel->find($record['currency_id']);
                 $currencyName = isset($currency['name']) ? $currency['name'] : 'Đơn vị tiền tệ';
                 $this->session->setFlashdata('error', 'Đơn vị tiền tệ ' . $currencyName . ' của quỹ này đã có giao dịch nên không thể xoá.');
                 return redirect()->to("cash-fund");
@@ -203,7 +203,7 @@ class CashFund extends BaseController
         // Nếu tất cả các dòng cash_fund_currencies đều thỏa điều kiện xóa, tiến hành xoá
         if ($this->cashFundsModel->delete($id)) {
             // Xoá các dòng liên quan trong cash_fund_currencies
-            $this->cashFundCurrenciesModel->where('cash_fund_id', $id)->delete();
+            $this->cashFundCurrencyModel->where('cash_fund_id', $id)->delete();
             $this->session->setFlashdata('success', 'Quỹ tiền đã được xóa.');
         } else {
             $this->session->setFlashdata('error', 'Xóa quỹ tiền thất bại.');
@@ -222,7 +222,7 @@ class CashFund extends BaseController
             $this->session->setFlashdata('error', 'Quỹ tiền không tồn tại.');
             return redirect()->to("cash-fund");
         }
-        $cfCurrencies = $this->cashFundCurrenciesModel->getFundCurrencies($id);
+        $cfCurrencies = $this->cashFundCurrencyModel->getFundCurrencies($id);
         // Định dạng số dư theo kiểu Việt Nam: làm tròn và phân cách hàng nghìn bằng dấu chấm
         foreach ($cfCurrencies as &$record) {
             $record['balance'] = number_format(round($record['balance']), 0, '', '.');

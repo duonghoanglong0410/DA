@@ -1,126 +1,194 @@
-<?php
+<?php namespace App\Controllers;
 
-namespace App\Controllers;
-
-use App\Models\PurchaseYardsModel;
+use App\Controllers\BaseController;
+use App\Models\PurchaseYardModel;
+use App\Models\PurchaseYardCurrencyFundModel;
+use App\Models\CurrencyModel;
+use CodeIgniter\HTTP\RequestInterface;
+use CodeIgniter\HTTP\ResponseInterface;
+use Psr\Log\LoggerInterface;
 
 class Yard extends BaseController
 {
-    protected $purchaseYardsModel;
+    protected $purchaseYardModel;
+    protected $purchaseYardCurrencyFundModel;
+    protected $currencyModel;
 
-    protected function isValidRole($role, $method, $segments)
-    {
-        return true;
-        // return $this->userModel->hasRole($this->session->userId, Roles::SYSTEM_MANAGER);
-    }    
-    
-    public function initController(\CodeIgniter\HTTP\RequestInterface $request, 
-                                   \CodeIgniter\HTTP\ResponseInterface $response, 
-                                   \Psr\Log\LoggerInterface $logger)
+    // Sử dụng initController thay vì __construct() theo CodeIgniter 4
+    public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {
         parent::initController($request, $response, $logger);
-        $this->purchaseYardsModel = new PurchaseYardsModel();
+        $this->purchaseYardModel             = new PurchaseYardModel();
+        $this->purchaseYardCurrencyFundModel = new PurchaseYardCurrencyFundModel();
+        $this->currencyModel                 = new CurrencyModel();
     }
-    
-    /**
-     * Liệt kê tất cả các kho bãi.
-     */
+
+    // Mỗi controller phải implement hàm isValidRole, trả về true mặc định
+    public function isValidRole($role, $method, $segments)
+    {
+        return true;
+    }
+
+    // Hiển thị danh sách kho bãi (getIndex - file view: index)
     public function getIndex()
     {
-        $yards = $this->purchaseYardsModel->findAll();
-        foreach ($yards as &$yard) {
-            $yard['status_text'] = ($yard['status'] == 1) ? 'Hoạt động' : 'Đã ngừng';
-        }
+        $yards = $this->purchaseYardModel->findAll();
         $this->assign('yards', $yards);
-        
-        return $this->render(); // Tự động load view: app/Views/yard/getIndex.php
-    }
-    
-    /**
-     * Hiển thị trang thêm mới kho bãi.
-     * Tự động tạo mã bãi mới theo định dạng Yxxxx.
-     */
-    public function getAdd()
-    {
-        // Lấy mã bãi mới từ model
-        $newCode = $this->purchaseYardsModel->getNextYardCode();
-        $this->assign('yard_code', $newCode);
         return $this->render();
     }
-    
-    
-    /**
-     * Xử lý thêm mới kho bãi.
-     */
+
+    // Hiển thị form thêm kho bãi và quản lý quỹ tiền (getAdd - file view: addEdit)
+    public function getAdd()
+    {
+        $this->assign('currencies', $this->currencyModel->findAll());
+        $this->assign('yard_code', '');
+        $this->assign('yard_name', '');
+        $this->assign('client_api_key', '');
+        $this->assign('status_active', 'selected');
+        $this->assign('status_inactive', '');
+        return $this->render();
+    }
+
+    // Xử lý thêm kho bãi và quỹ tiền tương ứng
     public function postAdd()
     {
+        $post = $this->request->getPost();
+
         $data = [
-            'yard_code'      => $this->request->getPost('yard_code'),
-            'yard_name'      => $this->request->getPost('yard_name'),
-            'client_api_key' => $this->request->getPost('client_api_key'),
-            'status'         => $this->request->getPost('status') ? 1 : 0,
+            'yard_code'      => $post['yard_code'],
+            'yard_name'      => $post['yard_name'],
+            'client_api_key' => $post['client_api_key'] ?? '',
+            'status'         => isset($post['status']) ? $post['status'] : 1,
+            'created_at'     => date('Y-m-d H:i:s'),
+            'updated_at'     => date('Y-m-d H:i:s'),
         ];
-        
-        if ($this->purchaseYardsModel->insert($data)) {
-            $this->session->setFlashdata('success', 'Kho bãi đã được thêm mới.');
-        } else {
-            $this->session->setFlashdata('error', 'Thêm mới kho bãi thất bại.');
+        $this->purchaseYardModel->insert($data);
+        $yard_id = $this->purchaseYardModel->insertID();
+
+        if (isset($post['currency_active']) && is_array($post['currency_active'])) {
+            foreach ($post['currency_active'] as $currency_id => $active) {
+                if ($active == 1) {
+                    $balance = isset($post['balance'][$currency_id]) ? $post['balance'][$currency_id] : 0;
+                    $fundData = [
+                        'purchase_yard_id' => $yard_id,  // Sử dụng purchase_yard_id thay vì yard_id
+                        'currency_id'      => $currency_id,
+                        'balance'          => $balance,
+                        'created_at'       => date('Y-m-d H:i:s'),
+                        'updated_at'       => date('Y-m-d H:i:s'),
+                    ];
+                    $this->purchaseYardCurrencyFundModel->insert($fundData);
+                }
+            }
         }
-        return redirect()->to("yard");
+        return redirect()->to('/yard/index');
     }
-    
-    /**
-     * Hiển thị form chỉnh sửa kho bãi.
-     */
-    public function getEdit($id)
+
+    // Hiển thị form sửa kho bãi và quản lý quỹ tiền (getEdit - file view: edit)
+    public function getEdit($yard_id)
     {
-        $yard = $this->purchaseYardsModel->find($id);
-        if (!$yard) {
-            $this->session->setFlashdata('error', 'Kho bãi không tồn tại.');
-            return redirect()->to("yard");
-        }
-        // Assign các biến đơn cho view
+        $yard = $this->purchaseYardModel->find($yard_id);
+        // Lấy danh sách quỹ tiền sử dụng cột purchase_yard_id
+        $cfCurrencies = $this->purchaseYardCurrencyFundModel->where('purchase_yard_id', $yard_id)->findAll();
+        $currencies   = $this->currencyModel->findAll();
+
         $this->assign('yard_id', $yard['id']);
         $this->assign('yard_code', $yard['yard_code']);
         $this->assign('yard_name', $yard['yard_name']);
         $this->assign('client_api_key', $yard['client_api_key']);
-        // Xử lý checkbox trạng thái: nếu status == 1, biến status_enabled = "checked", ngược lại rỗng.
-        $this->assign('status_enabled', ($yard['status'] == 1) ? 'checked' : '');
-        
+        if ($yard['status'] == 1) {
+            $this->assign('status_active', 'selected');
+            $this->assign('status_inactive', '');
+        } else {
+            $this->assign('status_active', '');
+            $this->assign('status_inactive', 'selected');
+        }
+        $this->assign('cfCurrencies', $cfCurrencies);
+        $this->assign('currencies', $currencies);
         return $this->render();
     }
-    
-    
-    /**
-     * Xử lý cập nhật kho bãi.
-     */
-    public function postEdit($id)
+
+    // Xử lý cập nhật thông tin kho bãi và quỹ tiền liên quan
+    public function postEdit($yard_id)
     {
+        $post = $this->request->getPost();
+    
         $data = [
-            'yard_code'      => $this->request->getPost('yard_code'),
-            'yard_name'      => $this->request->getPost('yard_name'),
-            'client_api_key' => $this->request->getPost('client_api_key'),
-            'status'         => $this->request->getPost('status') ? 1 : 0,
+            'yard_code'      => $post['yard_code'],
+            'yard_name'      => $post['yard_name'],
+            'client_api_key' => $post['client_api_key'] ?? '',
+            'status'         => isset($post['status']) ? $post['status'] : 1,
+            'updated_at'     => date('Y-m-d H:i:s'),
         ];
-        
-        if ($this->purchaseYardsModel->update($id, $data)) {
-            $this->session->setFlashdata('success', 'Kho bãi đã được cập nhật.');
-        } else {
-            $this->session->setFlashdata('error', 'Cập nhật kho bãi thất bại.');
+        $this->purchaseYardModel->update($yard_id, $data);
+    
+        // Lấy danh sách quỹ tiền hiện có của kho bãi sử dụng purchase_yard_id
+        $existingFunds = $this->purchaseYardCurrencyFundModel->where('purchase_yard_id', $yard_id)->findAll();
+        $submittedCurrencyIds = isset($post['currency_active']) ? array_keys($post['currency_active']) : [];
+    
+        foreach ($existingFunds as $fund) {
+            if (!in_array($fund['currency_id'], $submittedCurrencyIds)) {
+                // Kiểm tra xem quỹ tiền có đang được tham chiếu hay không
+                if ($this->purchaseYardCurrencyFundModel->isReferenced($fund['id'])) {
+                    return redirect()->back()->with('error', 'Không thể xóa quỹ tiền cho loại tiền ID ' . $fund['currency_id'] . ' vì đã được tham chiếu.');
+                }
+                // Kiểm tra số dư bằng 0 trước khi xóa
+                if ($fund['balance'] != 0) {
+                    return redirect()->back()->with('error', 'Không thể xóa quỹ tiền cho loại tiền ID ' . $fund['currency_id'] . ' vì số dư không bằng 0.');
+                }
+                $this->purchaseYardCurrencyFundModel->delete($fund['id']);
+            }
         }
-        return redirect()->to("{site_url}yard/edit/{$id}");
+    
+        if (isset($post['currency_active'])) {
+            foreach ($post['currency_active'] as $currency_id => $active) {
+                if ($active == 1) {
+                    $balance = isset($post['balance'][$currency_id]) ? $post['balance'][$currency_id] : 0;
+                    $existingFund = $this->purchaseYardCurrencyFundModel->where(['purchase_yard_id' => $yard_id, 'currency_id' => $currency_id])->first();
+                    if ($existingFund) {
+                        $updateData = [
+                            'balance'    => $balance,
+                            'updated_at' => date('Y-m-d H:i:s'),
+                        ];
+                        $this->purchaseYardCurrencyFundModel->update($existingFund['id'], $updateData);
+                    } else {
+                        $insertData = [
+                            'purchase_yard_id' => $yard_id,
+                            'currency_id'      => $currency_id,
+                            'balance'          => $balance,
+                            'created_at'       => date('Y-m-d H:i:s'),
+                            'updated_at'       => date('Y-m-d H:i:s'),
+                        ];
+                        $this->purchaseYardCurrencyFundModel->insert($insertData);
+                    }
+                }
+            }
+        }
+        return redirect()->to('{site_url}yard/index');
     }
     
-    /**
-     * Xóa kho bãi.
-     */
-    public function getDelete($id)
+
+    // Xử lý xóa kho bãi và các quỹ tiền liên quan (getDelete)
+    public function getDelete($yard_id)
     {
-        if ($this->purchaseYardsModel->delete($id)) {
-            $this->session->setFlashdata('success', 'Kho bãi đã được xóa.');
-        } else {
-            $this->session->setFlashdata('error', 'Xóa kho bãi thất bại.');
+        // Lấy thông tin quỹ tiền liên quan
+        $funds = $this->purchaseYardCurrencyFundModel->where('purchase_yard_id', $yard_id)->findAll();
+        // Nếu có bất kỳ quỹ tiền nào có số dư khác 0 thì không cho phép xóa
+        foreach ($funds as $fund) {
+            // Kiểm tra xem quỹ tiền có đang được tham chiếu hay không
+            if ($this->purchaseYardCurrencyFundModel->isReferenced($fund['id'])) {
+                return redirect()->back()->with('error', 'Không thể xóa quỹ tiền cho loại tiền ID ' . $fund['currency_id'] . ' vì đã được tham chiếu.');
+            }
+
+            if ($fund['balance'] != 0) {
+                return redirect()->back()->with('error', 'Không thể xóa kho bãi vì quỹ tiền cho loại tiền ID ' . $fund['currency_id'] . ' có số dư khác 0.');
+            }
         }
-        return redirect()->to("yard");
+        // Xóa tất cả các quỹ tiền liên quan trước
+        foreach ($funds as $fund) {
+            $this->purchaseYardCurrencyFundModel->delete($fund['id']);
+        }
+        // Xóa kho bãi
+        $this->purchaseYardModel->delete($yard_id);
+        return redirect()->to('/yard/index');
     }
 }
