@@ -4,7 +4,7 @@ namespace App\Models;
 
 use App\Models\BaseModel;
 
-class UserRoleAssignmentsModel extends BaseModel
+class UserRoleAssignmentModel extends BaseModel
 {
     protected $table = 'user_role_assignments';
     protected $primaryKey = 'id';

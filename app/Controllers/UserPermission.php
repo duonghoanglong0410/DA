@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 use App\Models\UsersModel;
 use App\Models\RolesModel;
-use App\Models\UserRoleAssignmentsModel;
+use App\Models\UserRoleAssignmentModel;
 use App\Models\PurchaseYardModel;
 use App\Models\CashFundsModel; // Giả sử bạn đã tạo model này
 use App\Constants\Roles; // Nếu cần dùng các hằng số cho role
@@ -31,11 +31,42 @@ class UserPermission extends BaseController
         parent::initController($request, $response, $logger);
         $this->userModel = new UsersModel();
         $this->roleModel = new RolesModel();
-        $this->userRoleModel = new UserRoleAssignmentsModel();
+        $this->userRoleModel = new UserRoleAssignmentModel();
         $this->purchaseYardModel = new purchaseYardModel();
-        $this->cashFundsModel = new CashFundsModel();
+        $this->cashFundsModel = new CashFundsModel();        
     }
     
+    // GET: Liệt kê danh sách người dùng (view: getUserList)
+    public function getUserList()
+    {
+        // Lấy danh sách người dùng
+        $users = $this->userModel->findAll();
+        // Lấy danh sách vai trò
+        $roles = $this->roleModel->findAll();
+        // Lấy tất cả các phân công vai trò
+        $assignments = $this->userRoleModel->findAll();
+
+        // Tạo mapping: user_id => mảng role_id
+        $userRoles = [];
+        foreach ($assignments as $assign) {
+            $userRoles[$assign['user_id']][] = $assign['role_id'];
+        }
+
+        // Cho mỗi người dùng, thêm các trường role_<role_id>
+        foreach ($users as &$user) {
+            foreach ($roles as $role) {
+                $field = 'role_' . $role['id'];
+                $user[$field] = (isset($userRoles[$user['id']]) && in_array($role['id'], $userRoles[$user['id']]))
+                    ? '<i class="fa fa-check text-primary"></i>' : '';
+            }
+        }
+        unset($user);
+
+        $this->assign('users', $users);
+        $this->assign('roles', $roles);
+        return $this->render();
+    }
+
     /**
      * Hiển thị trang chỉnh sửa phân quyền cho một user.
      * Nếu không truyền userId thì sử dụng userId hiện tại từ session.
