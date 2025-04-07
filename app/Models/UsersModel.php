@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Constants\Roles;
 use App\Models\BaseModel;
 
 class UsersModel extends BaseModel
@@ -167,59 +168,49 @@ class UsersModel extends BaseModel
     }
 
     /**
-     * Trả về mapping quyền của user.
-     *
-     * Danh sách role cố định:
-     * - "Nhân viên bãi"             => PURCHASE_YARD_EMPLOYEE
-     * - "Thủ quỹ của bãi"            => PURCHASE_YARD_CASHIER
-     * - "Điều phối xe"               => DISPATCHER
-     * - "Kiểm soát tài chính kho bãi"=> FINANCE_CONTROLLER
-     * - "Quản lý kho"               => WAREHOUSE_MANAGER
-     * - "Kế toán công nợ"           => DEBT_ACCOUNTANT
-     * - "Thủ quỹ"                   => CASHIER
-     * - "Quản lý bán hàng"          => SALES_MANAGER
-     * - "Phụ trách chi phí hải quan" => CUSTOMS_COST_CONTROLLER
-     * - "Quản lý chi phí hải quan"   => CUSTOMS_COST_MANAGER
-     * - "Quản lý hệ thống"           => SYSTEM_MANAGER
+     * Lấy danh sách menu (permission với is_main_menu = 1) mà user được cấp,
+     * nhóm theo trường "group" theo yêu cầu của hệ thống.
      *
      * @param int $userId
-     * @return array Mảng mapping, ví dụ: ['PURCHASE_YARD_EMPLOYEE' => [[1]], 'DISPATCHER' => [] , ...]
+     * @return array Mảng mapping, ví dụ: 
+     *   [
+     *      'PURCHASE_YARD_EMPLOYEE' => [[1]], 
+     *      'DISPATCHER' => [] , 
+     *      ...
+     *   ]
      */
     public function getUserRolePermissionsMapping($userId)
     {
-        $db = \Config\Database::connect();
-        // Thực hiện truy vấn một lần để lấy tất cả role của user
-        $builder = $db->table('user_role_assignments');
-        $builder->select('r.name');
+        $builder = $this->db->table('user_role_assignments');
+        $builder->select('r.id');
         $builder->join('roles as r', 'r.id = user_role_assignments.role_id', 'inner');
         $builder->where('user_role_assignments.user_id', $userId);
         $query = $builder->get();
-        $userRoles = [];
-        foreach ($query->getResultArray() as $row) {
-            $userRoles[] = $row['name'];
-        }
-
-        // Danh sách role cố định theo văn bản gốc và mapping sang key tiếng Anh mong muốn:
+        $userRoles = array_column($query->getResultArray(), 'id');
+        
+        // Sử dụng hằng số để mapping: key của mảng là giá trị menu key từ Roles,
+        // và key của role là số (hằng số từ Roles)
         $rolesMapping = [
-            'Nhân viên bãi'              => 'PURCHASE_YARD_EMPLOYEE',
-            'Thủ quỹ của bãi'             => 'PURCHASE_YARD_CASHIER',
-            'Điều phối xe'                => 'DISPATCHER',
-            'Kiểm soát tài chính kho bãi' => 'FINANCE_CONTROLLER',
-            'Quản lý kho'                => 'WAREHOUSE_MANAGER',
-            'Kế toán công nợ'            => 'DEBT_ACCOUNTANT',
-            'Thủ quỹ'                    => 'CASHIER',
-            'Quản lý bán hàng'           => 'SALES_MANAGER',
-            'Phụ trách chi phí hải quan'  => 'CUSTOMS_COST_CONTROLLER',
-            'Quản lý chi phí hải quan'    => 'CUSTOMS_COST_MANAGER',
-            'Quản lý hệ thống'            => 'SYSTEM_MANAGER'
+            Roles::YARD_EMPLOYEE           => Roles::MENU_PURCHASE_YARD_EMPLOYEE,
+            Roles::YARD_CASHIER            => Roles::MENU_PURCHASE_YARD_CASHIER,
+            Roles::DISPATCHER              => Roles::MENU_DISPATCHER,
+            Roles::FINANCE_CONTROLLER      => Roles::MENU_FINANCE_CONTROLLER,
+            Roles::WAREHOUSE_MANAGER       => Roles::MENU_WAREHOUSE_MANAGER,
+            Roles::DEBT_ACCOUNTANT         => Roles::MENU_DEBT_ACCOUNTANT,
+            Roles::CASHIER                 => Roles::MENU_CASHIER,
+            Roles::SALES_MANAGER           => Roles::MENU_SALES_MANAGER,
+            Roles::CUSTOMS_COST_CONTROLLER => Roles::MENU_CUSTOMS_COST_CONTROLLER,
+            Roles::CUSTOMS_COST_MANAGER    => Roles::MENU_CUSTOMS_COST_MANAGER,
+            Roles::SYSTEM_MANAGER          => Roles::MENU_SYSTEM_MANAGER,
         ];
 
         $result = [];
-        foreach ($rolesMapping as $roleName => $key) {
-            $result[$key] = in_array($roleName, $userRoles) ? [[1]] : [];
+        foreach ($rolesMapping as $roleId => $menuKey) {
+            $result[$menuKey] = in_array($roleId, $userRoles) ? [[1]] : [];
         }
         return $result;
     }
+
 
     /**
      * Lấy danh sách menu (permission với is_main_menu = 1) mà user được cấp,
