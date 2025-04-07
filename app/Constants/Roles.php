@@ -29,4 +29,18 @@ class Roles
     public const MENU_CUSTOMS_COST_CONTROLLER  = 'CUSTOMS_COST_CONTROLLER';
     public const MENU_CUSTOMS_COST_MANAGER     = 'CUSTOMS_COST_MANAGER';
     public const MENU_SYSTEM_MANAGER           = 'SYSTEM_MANAGER';
+
+    public const ROLES_MAPPING = [
+        Roles::YARD_EMPLOYEE           => Roles::MENU_PURCHASE_YARD_EMPLOYEE,
+        Roles::YARD_CASHIER            => Roles::MENU_PURCHASE_YARD_CASHIER,
+        Roles::DISPATCHER              => Roles::MENU_DISPATCHER,
+        Roles::FINANCE_CONTROLLER      => Roles::MENU_FINANCE_CONTROLLER,
+        Roles::WAREHOUSE_MANAGER       => Roles::MENU_WAREHOUSE_MANAGER,
+        Roles::DEBT_ACCOUNTANT         => Roles::MENU_DEBT_ACCOUNTANT,
+        Roles::CASHIER                 => Roles::MENU_CASHIER,
+        Roles::SALES_MANAGER           => Roles::MENU_SALES_MANAGER,
+        Roles::CUSTOMS_COST_CONTROLLER => Roles::MENU_CUSTOMS_COST_CONTROLLER,
+        Roles::CUSTOMS_COST_MANAGER    => Roles::MENU_CUSTOMS_COST_MANAGER,
+        Roles::SYSTEM_MANAGER          => Roles::MENU_SYSTEM_MANAGER,
+    ];    
 }
