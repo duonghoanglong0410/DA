@@ -178,6 +178,12 @@ class Buyer extends BaseController
     // GET: Xử lý xoá nhà máy và các quỹ tiền liên quan
     public function getDelete($buyer_id)
     {
+        // Kiểm tra nếu nhà máy (buyer) được sử dụng trong chuyến xe (trips.factory_id)
+        $tripCount = $this->tripModel->where('factory_id', $buyer_id)->countAllResults();
+        if ($tripCount > 0) {
+            return redirect()->to('buyer')->with('error', 'Không thể xoá nhà máy vì đã được sử dụng trong chuyến xe.');
+        }
+    
         $funds = $this->buyerCurrencyFundModel->where('buyer_id', $buyer_id)->findAll();
         foreach ($funds as $fund) {
             if ($fund['remaining_debt'] != 0) {
@@ -195,4 +201,5 @@ class Buyer extends BaseController
         $this->buyerModel->delete($buyer_id);
         return redirect()->to('buyer');
     }
+    
 }

@@ -3,7 +3,7 @@
     <div class="col-12 col-md-8 col-lg-6">
       <div class="form-box">
         <h2 class="mb-4">Thêm Kho Bãi</h2>
-        <form action="{site_url}yard/add" method="post" class="getDetail">
+        <form id="yardAddForm" action="{site_url}yard/add" method="post" class="getDetail">
           <div class="mb-3">
             <label for="yard_code" class="form-label">Mã Kho</label>
             <input type="text" name="yard_code" id="yard_code" class="form-control" value="{yard_code}" required>
@@ -25,14 +25,17 @@
           </div>
           <hr class="my-3">
           <h5 class="mb-3">Chọn các loại tiền tệ sử dụng</h5>
-          {currencies}
-          <div class="form-check mb-2">
-            <input type="checkbox" class="form-check-input" name="currency_active[{id}]" id="currency_active_{id}" value="1">
-            <label class="form-check-label" for="currency_active_{id}">{name} ({abbreviation})</label>
-            <!-- Quỹ tiền kho bãi chỉ cho phép bật/tắt, số dư luôn là 0 -->
-            <input type="hidden" name="balance[{id}]" value="0">
+          <div id="currencyList">
+            {currencies}
+            <div class="form-check mb-2">
+              <input type="checkbox" class="form-check-input" name="currency_active[{id}]" id="currency_active_{id}" value="1">
+              <label class="form-check-label" for="currency_active_{id}">{name} ({abbreviation})</label>
+              <!-- Quỹ tiền của kho bãi chỉ cho phép bật/tắt, số dư luôn là 0 -->
+              <input type="hidden" name="balance[{id}]" value="0">
+            </div>
+            {/currencies}
           </div>
-          {/currencies}
+          <div id="errorMessage" class="text-danger mb-3"></div>
           <div class="mt-4">
             <button type="submit" class="btn btn-primary">Lưu</button>
             <button type="button" class="btn btn-secondary" onclick="window.history.back();">Trở lại</button>
@@ -42,3 +45,14 @@
     </div>
   </div>
 </div>
+
+<script>
+$(document).ready(function(){
+    $("#yardAddForm").submit(function(e){
+        /* chèn ghi chú */ if ($("input[name^='currency_active']:checked").length == 0) {
+            $("#errorMessage").html("Vui lòng chọn ít nhất một loại tiền tệ.");
+            e.preventDefault();
+        }
+    });
+});
+</script>

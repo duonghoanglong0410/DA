@@ -3,7 +3,7 @@
     <div class="col-12 col-md-8 col-lg-6">
       <div class="form-box">
         <h2 class="mb-4">Sửa Kho Bãi</h2>
-        <form action="{site_url}yard/edit/{yard_id}" method="post" class="getDetail">
+        <form id="yardEditForm" action="{site_url}yard/edit/{yard_id}" method="post" class="getDetail">
           <div class="mb-3">
             <label for="yard_code" class="form-label">Mã Kho</label>
             <input type="text" name="yard_code" id="yard_code" class="form-control" value="{yard_code}" required>
@@ -25,12 +25,15 @@
           </div>
           <hr class="my-3">
           <h5 class="mb-3">Chọn các loại tiền tệ sử dụng</h5>
-          {currencies}
-          <div class="form-check mb-2">
-            <input type="checkbox" class="form-check-input" name="currency_active[{id}]" id="currency_active_{id}" value="1" {active}>
-            <label class="form-check-label" for="currency_active_{id}">{name} ({abbreviation})</label>
+          <div id="currencyList">
+            {currencies}
+            <div class="form-check mb-2">
+              <input type="checkbox" class="form-check-input" name="currency_active[{id}]" id="currency_active_{id}" value="1" {active}>
+              <label class="form-check-label" for="currency_active_{id}">{name} ({abbreviation})</label>
+            </div>
+            {/currencies}
           </div>
-          {/currencies}
+          <div id="errorMessage" class="text-danger mb-3"></div>
           <div class="mt-4">
             <button type="submit" class="btn btn-primary">Cập nhật</button>
             <button type="button" class="btn btn-secondary" onclick="window.history.back();">Trở lại</button>
@@ -40,3 +43,14 @@
     </div>
   </div>
 </div>
+
+<script>
+$(document).ready(function(){
+    $("#yardEditForm").submit(function(e){
+        /* chèn ghi chú */ if ($("input[name^='currency_active']:checked").length == 0) {
+            $("#errorMessage").html("Vui lòng chọn ít nhất một loại tiền tệ.");
+            e.preventDefault();
+        }
+    });
+});
+</script>
