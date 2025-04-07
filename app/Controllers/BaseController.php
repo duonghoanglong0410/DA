@@ -45,6 +45,7 @@ abstract class BaseController extends Controller
     protected $moduleSubFix = "";
 
     protected $defaultWithHeader = true;    //Có parse kèm header và footer mặc định hay không
+    protected $defaultGlobalMess = true; 
 
 
     abstract protected function isValidRole($role, $method);
@@ -76,7 +77,7 @@ abstract class BaseController extends Controller
         $this->session = \Config\Services::session();
 
         #Tự động chạy migration trong lần đầu tiên user vào hệ thống nếu có thay đổi
-        if (empty($this->session->didMigration)) 
+        if (empty($this->session->didMigration) || ENVIRONMENT === 'development')
         {
             $migration = \Config\Services::migrations();
             try {
@@ -94,6 +95,7 @@ abstract class BaseController extends Controller
         $this->userModel = new UsersModel();
 
         //gắn các biến cơ bản ra view parser
+        $this->initFlashData();
         $this->assign('site_url', site_url());
         $this->assign('base_url', base_url());
         $this->assign('site_title', SettingsModel::getInstance()->getByKey('site_title', "ATVN"));
@@ -122,6 +124,9 @@ abstract class BaseController extends Controller
 
         if (empty($user) || !$this->userModel->hasAccess($this->session->userId, $controller, $method) || !$this->isValidRole($this->session->userRole, $method))
         {
+            if (ENVIRONMENT === 'development') {
+                $this->session->setFlashdata('error', "Truy cập đến controller <b>$controller</b> method <b>$method</b> bị chặn, hãy kiểm tra phân quyền hoặc xem xét table <b>permissions</b> cột <b>action</b> và </b>method</b>");
+            }
             header('Location: ' . site_url("/user/error"));
             exit;
         }
@@ -129,6 +134,30 @@ abstract class BaseController extends Controller
         $permissionsMapping = $this->userModel->getUserRolePermissionsMapping($this->session->userId);
         foreach ($permissionsMapping as $key => $value) {
             $this->assign($key, $value);
+        }
+
+    }
+
+
+    protected function globalMessVisibility($visible)
+    {
+        $this->defaultGlobalMess = $visible;
+    }
+
+    private function initFlashData()
+    {
+        // Lấy flashdata error và success
+        $error = $this->session->getFlashdata('error');
+        if (empty($error)) {
+            $this->assign('error', []);
+        } else {
+            $this->assign('error', [['mess' => $error]]);
+        }
+        $success = $this->session->getFlashdata('success');
+        if (empty($success)) {
+            $this->assign('success', []);
+        } else {
+            $this->assign('success', [['mess' => $success]]);
         }
 
     }
@@ -165,6 +194,15 @@ abstract class BaseController extends Controller
 
         if (empty($viewname)) {
             $viewname = $controller . "/" . $router->methodName();
+        }
+
+        if ($this->defaultGlobalMess)
+        {
+            $this->viewData['globalmess'] = '';
+        }
+        else
+        {
+            $this->viewData['globalmess'] = 'none';
         }
 
         $this->viewData['extrajs'] = $this->extraJs;

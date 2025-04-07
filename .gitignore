@@ -20,3 +20,4 @@ application/logs/*
 .env
 tests/
 writable/*
+.~lock.*.*#

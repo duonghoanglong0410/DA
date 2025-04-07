@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Đăng nhập</title>
+  <title>{site_title}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <!-- Bootstrap CSS -->
@@ -19,3 +19,18 @@
 </head>
 
 <body>
+
+  <div style="display: {globalmess};">
+    {error}
+    <div class="alert alert-danger">
+      {mess}
+    </div>
+    {/error}
+
+    {success}
+    <div class="alert alert-success">
+      {mess}
+    </div>
+    {/success}
+
+  </div>

@@ -17,16 +17,7 @@ class User extends BaseController
      */
     public function getLogin()
     {
-        $error = $this->session->getFlashdata('error');
-
-        if (empty($error))
-        {
-            $this->assign('error', []);
-        }
-        else
-        {
-            $this->assign('error', [['mess' => $error]]);
-        }
+        $this->globalMessVisibility(false);
 
         return $this->render();
     }
@@ -178,6 +169,8 @@ class User extends BaseController
      */
     public function getError($mid = '')
     {
+        $this->globalMessVisibility(false);
+
         switch ($mid) {
             case 'i001':
                 $this->assign('mtitle', 'Không thể in phiếu xuất');

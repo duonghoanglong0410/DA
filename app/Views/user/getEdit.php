@@ -1,15 +1,3 @@
-{error}
-<div class="alert alert-danger">
-  {mess}
-</div>
-{/error}
-
-{success}
-<div class="alert alert-success">
-  {mess}
-</div>
-{/success}
-
 <div class="container mt-3">
   <div class="row justify-content-center">
     <div class="col-12 col-md-8 col-lg-6">

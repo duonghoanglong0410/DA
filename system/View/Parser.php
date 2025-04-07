@@ -506,7 +506,8 @@ class Parser extends View
         } catch (ParseError) {
             ob_end_clean();
 
-            throw ViewException::forTagSyntaxError(str_replace(['?>', '<?php '], '', $template));
+            throw ViewException::forTagSyntaxError($template);
+            // throw ViewException::forTagSyntaxError(str_replace(['? >', '< ?php '], '', $template));
         }
 
         return ob_get_clean();
