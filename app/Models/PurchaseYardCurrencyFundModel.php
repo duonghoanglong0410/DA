@@ -1,5 +1,6 @@
 <?php namespace App\Models;
 
+use App\Constants\VoucherTypes;
 use App\Models\BaseModel;
 
 class PurchaseYardCurrencyFundModel extends BaseModel
@@ -39,5 +40,27 @@ class PurchaseYardCurrencyFundModel extends BaseModel
         $builder->orWhere('receiving_currency_fund_id', $pycfId);
         $count = $builder->countAllResults();
         return ($count > 0);
+
+        $builder = $this->db->table('cash_vouchers');
+        $builder->groupStart()
+                    ->groupStart()
+                        ->where('sending_currency_fund_id', $pycfId)
+                        ->where("voucher_type BETWEEN " . VoucherTypes::EXTERNAL_EXPENSE . " AND " . VoucherTypes::INTERNAL_EXPENSE . "", null, false)
+                    ->groupEnd()
+                    ->orGroupStart()
+                        ->where('sending_currency_fund_id', $pycfId)
+                        ->where("voucher_type", VoucherTypes::OTHER_EXPENSE)
+                    ->groupEnd()
+                    ->orGroupStart()
+                        ->where('sending_currency_fund_id', $pycfId)
+                        ->where('voucher_type', 301)
+                    ->groupEnd()
+                    ->orGroupStart()
+                        ->where('receiving_currency_fund_id', $pycfId)
+                        ->where("voucher_type", VoucherTypes::CUSTOMER_COLLECTION)
+                    ->groupEnd()
+                ->groupEnd();
+        $count = $builder->countAllResults();
+        return ($count > 0);        
     }
 }

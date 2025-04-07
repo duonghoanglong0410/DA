@@ -25,11 +25,25 @@ class CashFundCurrencyModel extends BaseModel
     public function isReferenced($cfId)
     {
         $builder = $this->db->table('cash_vouchers');
-        $builder->where('sending_currency_fund_id', $cfId);
-        $builder->orWhere('receiving_currency_fund_id', $cfId);
+        $builder->groupStart()
+                    ->groupStart()
+                        ->where('sending_currency_fund_id', $cfId)
+                        ->where("voucher_type BETWEEN 100 AND 199", null, false)
+                    ->groupEnd()
+                    ->orGroupStart()
+                        ->where('sending_currency_fund_id', $cfId)
+                        ->where('voucher_type', 301)
+                    ->groupEnd()
+                    ->orGroupStart()
+                        ->where('receiving_currency_fund_id', $cfId)
+                        ->where("voucher_type BETWEEN 200 AND 299", null, false)
+                    ->groupEnd()
+                ->groupEnd();
         $count = $builder->countAllResults();
         return ($count > 0);
     }
+    
+    
     
     /**
      * Lấy thông tin tiền tệ của quỹ, kèm dữ liệu từ bảng currencies.
