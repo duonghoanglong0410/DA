@@ -258,4 +258,14 @@ class UsersModel extends BaseModel
         ksort($menus);
         return $menus;
     }    
+
+    public function hasRole($userId, $roleId)
+    {
+        $db = \Config\Database::connect();
+        $builder = $db->table('user_role_assignments');
+        $builder->where('user_id', $userId);
+        $builder->where('role_id', $roleId);
+        return $builder->countAllResults() > 0;
+    }
+    
 }

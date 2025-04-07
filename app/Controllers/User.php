@@ -2,6 +2,8 @@
 
 namespace App\Controllers;
 
+use App\Constants\Roles;
+
 class User extends BaseController
 {
     protected function isValidRole($role, $method)
@@ -79,11 +81,21 @@ class User extends BaseController
         if ($id === null) {
             $id = $this->session->userId;
         }
+
+        // Nếu user cố gắng chỉnh sửa thông tin của người khác
+        if ($id != $this->session->userId) {
+            // Kiểm tra nếu user hiện tại có role = Roles::SYSTEM_MANAGER
+            if (!$this->userModel->hasRole($this->session->userId, Roles::SYSTEM_MANAGER)) {
+                $this->session->setFlashdata('error', 'Bạn không có quyền chỉnh sửa thông tin của người khác.');
+                return redirect()->to(site_url('user/error'));
+            }
+        }    
+            
         
         $user = $this->userModel->find($id);
         if (!$user) {
             $this->session->setFlashdata('error', 'User không tồn tại.');
-            return redirect()->to(site_url('user'));
+            return redirect()->to(site_url('user/error'));
         }
         
         // Gán các giá trị cần thiết vào view
@@ -118,6 +130,13 @@ class User extends BaseController
     {
         if ($id === null) {
             $id = $this->session->userId;
+        } else {
+            if ($id != $this->session->userId) {
+                if (!$this->userModel->hasRole($this->session->userId, Roles::SYSTEM_MANAGER)) {
+                    $this->session->setFlashdata('error', 'Bạn không có quyền chỉnh sửa thông tin của người khác.');
+                    return redirect()->to(site_url("user/error"));
+                }
+            }
         }
         
         // Lấy dữ liệu cơ bản từ form
@@ -165,9 +184,15 @@ class User extends BaseController
                 $this->assign('message', '<p>Hệ thống chỉ hỗ trợ in phiếu xuất kho cho các đơn hàng được tạo từ báo giá.</p><p>Đơn hàng này được tạo thủ công từ trang quản lý giao vận nên không đủ thông tin để lập phiếu xuất.</p>');
                 break;
             default:
+                $error = $this->session->getFlashdata('error');
+                if (empty($error))
+                {
+                    $error = 'Bạn không đủ quyền để thực hiện chức năng này. Nếu bạn cho rằng đây là một sự nhầm lẫn, xin vui lòng liên hệ với nhân viên quản lý trực tiếp để được hướng dẫn.';
+                }
                 $this->assign('mtitle', 'OPPSSS!!!! Rất tiếc...');
-                $this->assign('message', 'Bạn không đủ quyền để thực hiện chức năng này. Nếu bạn cho rằng đây là một sự nhầm lẫn, xin vui lòng liên hệ với nhân viên quản lý trực tiếp để được hướng dẫn.');
+                $this->assign('message', $error);
         }
+        
         return $this->render();
     }
 }
