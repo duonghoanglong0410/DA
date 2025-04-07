@@ -29,8 +29,6 @@
           <div class="form-check mb-2">
             <input type="checkbox" class="form-check-input" name="currency_active[{id}]" id="currency_active_{id}" value="1" {active}>
             <label class="form-check-label" for="currency_active_{id}">{name} ({abbreviation})</label>
-            <!-- {balance_input} chứa HTML hidden input nếu quỹ tiền đang bật -->
-            {balance_input}
           </div>
           {/currencies}
           <div class="mt-4">

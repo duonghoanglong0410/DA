@@ -34,9 +34,9 @@ class PurchaseYardCurrencyFundModel extends BaseModel
      */
     public function isReferenced($pycfId)
     {
-        $builder = $this->db->table('yard_vouchers');
-        $builder->where('sending_yard_currency_fund_id', $pycfId);
-        $builder->orWhere('receiving_yard_currency_fund_id', $pycfId);
+        $builder = $this->db->table('cash_vouchers');
+        $builder->where('sending_currency_fund_id', $pycfId);
+        $builder->orWhere('receiving_currency_fund_id', $pycfId);
         $count = $builder->countAllResults();
         return ($count > 0);
     }

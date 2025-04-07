@@ -33,9 +33,14 @@ class Yard extends BaseController
     public function getIndex()
     {
         $yards = $this->purchaseYardModel->findAll();
+        // Chuyển đổi status thành status_text cho từng kho bãi
+        foreach ($yards as &$yard) {
+            $yard['status_text'] = ($yard['status'] == 1) ? 'Hoạt động' : 'Ngừng';
+        }
         $this->assign('yards', $yards);
         return $this->render();
     }
+    
 
     // Hiển thị form thêm kho bãi và quản lý quỹ tiền (getAdd - view: getAdd)
     public function getAdd()
@@ -79,7 +84,7 @@ class Yard extends BaseController
                 }
             }
         }
-        return redirect()->to('yard/index');
+        return redirect()->to('yard');
     }
 
     // Hiển thị form sửa kho bãi và quản lý quỹ tiền (getEdit - view: getEdit)
@@ -87,8 +92,27 @@ class Yard extends BaseController
     {
         $yard = $this->purchaseYardModel->find($yard_id);
         $cfCurrencies = $this->purchaseYardCurrencyFundModel->where('purchase_yard_id', $yard_id)->findAll();
-        $currencies   = $this->currencyModel->findAll();
-
+        $currencies = $this->currencyModel->findAll();
+    
+        // Xử lý mảng currencies để gán active và balance_input nếu loại tiền đã được chọn
+        foreach ($currencies as &$currency) {
+            $found = false;
+            $balance = 0;
+            foreach ($cfCurrencies as $cf) {
+                if ($cf['currency_id'] == $currency['id']) {
+                    $found = true;
+                    $balance = $cf['balance'];
+                    break;
+                }
+            }
+            if ($found) {
+                $currency['active'] = 'checked';
+            } else {
+                $currency['active'] = '';
+            }
+        }
+        unset($currency);
+    
         $this->assign('yard_id', $yard['id']);
         $this->assign('yard_code', $yard['yard_code']);
         $this->assign('yard_name', $yard['yard_name']);
@@ -100,10 +124,10 @@ class Yard extends BaseController
             $this->assign('status_active', '');
             $this->assign('status_inactive', 'selected');
         }
-        $this->assign('cfCurrencies', $cfCurrencies);
         $this->assign('currencies', $currencies);
         return $this->render();
     }
+    
 
     // Xử lý cập nhật thông tin kho bãi và quỹ tiền (postEdit)
     public function postEdit($yard_id)
@@ -159,7 +183,7 @@ class Yard extends BaseController
                 }
             }
         }
-        return redirect()->to('yard/index');
+        return redirect()->to('yard');
     }
 
     // Xử lý xóa kho bãi và các quỹ tiền liên quan (getDelete)
@@ -178,6 +202,6 @@ class Yard extends BaseController
             $this->purchaseYardCurrencyFundModel->delete($fund['id']);
         }
         $this->purchaseYardModel->delete($yard_id);
-        return redirect()->to('yard/index');
+        return redirect()->to('yard');
     }
 }
