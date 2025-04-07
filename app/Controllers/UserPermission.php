@@ -48,68 +48,75 @@ class UserPermission extends BaseController
         $user = $this->userModel->find($userId);
         if (!$user) {
             $this->session->setFlashdata('error', 'User không tồn tại.');
-            return redirect()->to("{site_url}user-permission");
+            return redirect()->to("user-permission");
         }
         
-        // Lấy tất cả role
+        // Lấy tất cả các role
         $roles = $this->roleModel->findAll();
-        // Lấy danh sách phân quyền đã gán cho user (user_role_assignments)
+        // Lấy danh sách phân quyền đã gán cho user
         $userAssignments = $this->userRoleModel->where('user_id', $userId)->findAll();
-        // Tạo mapping: role_id => array các target (purchase_yard_id hoặc cash_fund_id)
+        // Mapping: role_id => mảng target (target có thể là purchase_yard_id hoặc cash_fund_id)
         $assignedRoles = [];
         foreach ($userAssignments as $ua) {
             $rid = $ua['role_id'];
             if (!isset($assignedRoles[$rid])) {
                 $assignedRoles[$rid] = [];
             }
-            // Dùng cột purchase_yard_id để lưu target cho cả target_type 1 và 2
             if (!empty($ua['purchase_yard_id'])) {
                 $assignedRoles[$rid][] = $ua['purchase_yard_id'];
             }
         }
         
-        // Lấy danh sách bãi thu mua và quỹ tiền tệ
+        // Lấy danh sách purchase yards và cash funds
         $purchaseYards = $this->purchaseYardsModel->findAll();
         $cashFunds     = $this->cashFundsModel->findAll();
         
-        // Tạo mảng flatRoles: mỗi phần tử chứa các trường đơn để view có thể sử dụng
-        $group1 = []; // target_type = 1 (theo bãi)
-        $group2 = []; // target_type = 2 (quỹ tiền)
-        $group3 = []; // target_type = 0 (chức năng chung)
+        // Tạo các mảng nhóm role
+        $group1 = []; // target_type = 1: theo bãi
+        $group2 = []; // target_type = 2: quỹ tiền
+        $group3 = []; // target_type = 0: chức năng chung
         
         foreach ($roles as $role) {
             $roleData = [];
             $roleData['id'] = $role['id'];
             $roleData['name'] = $role['name'];
-            $roleData['target_type'] = $role['target_type']; // 1,2 hoặc 0
-            // Checkbox được đánh dấu nếu có bất kỳ target nào được gán
+            $roleData['target_type'] = $role['target_type']; // giá trị 1, 2, hoặc 0
             $roleData['checked'] = (isset($assignedRoles[$role['id']]) && count($assignedRoles[$role['id']]) > 0) ? 'checked="checked"' : '';
             
-            // Xây dựng dropdown tùy thuộc vào target_type
+            // Nếu role có target_type = 1 hoặc 2, tạo mảng toggle (sẽ là mảng con)
+            $roleData['toggle'] = [];
             if ((int)$role['target_type'] === 1) {
-                // Dropdown cho purchase yards - cho phép chọn nhiều (multi-select)
-                $options = '';
+                // Sử dụng danh sách purchase yards cho role target_type = 1
                 foreach ($purchaseYards as $py) {
-                    $selected = (isset($assignedRoles[$role['id']]) && in_array($py['id'], $assignedRoles[$role['id']])) ? ' selected' : '';
-                    $options .= '<option value="' . $py['id'] . '"' . $selected . '>' . $py['yard_name'] . '</option>';
+                    $toggle = [];
+                    if (isset($assignedRoles[$role['id']]) && in_array($py['id'], $assignedRoles[$role['id']])) {
+                        $toggle['toggle_active'] = 'active';
+                        $toggle['toggle_checked'] = 'checked';
+                    } else {
+                        $toggle['toggle_active'] = '';
+                        $toggle['toggle_checked'] = '';
+                    }
+                    $toggle['toggle_role_id'] = $role['id'];
+                    $toggle['toggle_y_id'] = $py['id'];
+                    $toggle['toggle_yard_name'] = $py['yard_name'];
+                    $roleData['toggle'][] = $toggle;
                 }
-                $dropdown = '<select class="form-control" name="target_' . $role['id'] . '[]" id="target_' . $role['id'] . '" multiple>';
-                $dropdown .= $options;
-                $dropdown .= '</select>';
-                $roleData['dropdown'] = $dropdown;
             } elseif ((int)$role['target_type'] === 2) {
-                // Dropdown cho cash funds
-                $options = '';
+                // Sử dụng danh sách cash funds cho role target_type = 2
                 foreach ($cashFunds as $cf) {
-                    $selected = (isset($assignedRoles[$role['id']]) && in_array($cf['id'], $assignedRoles[$role['id']])) ? ' selected' : '';
-                    $options .= '<option value="' . $cf['id'] . '"' . $selected . '>' . $cf['fund_name'] . '</option>';
+                    $toggle = [];
+                    if (isset($assignedRoles[$role['id']]) && in_array($cf['id'], $assignedRoles[$role['id']])) {
+                        $toggle['toggle_active'] = 'active';
+                        $toggle['toggle_checked'] = 'checked';
+                    } else {
+                        $toggle['toggle_active'] = '';
+                        $toggle['toggle_checked'] = '';
+                    }
+                    $toggle['toggle_role_id'] = $role['id'];
+                    $toggle['toggle_y_id'] = $cf['id'];
+                    $toggle['toggle_yard_name'] = $cf['fund_name'];
+                    $roleData['toggle'][] = $toggle;
                 }
-                $dropdown = '<select class="form-control" name="target_' . $role['id'] . '[]" id="target_' . $role['id'] . '" multiple>';
-                $dropdown .= $options;
-                $dropdown .= '</select>';
-                $roleData['dropdown'] = $dropdown;
-            } else {
-                $roleData['dropdown'] = '';
             }
             
             // Phân nhóm theo target_type
@@ -125,13 +132,15 @@ class UserPermission extends BaseController
         // Assign các biến đơn cho view
         $this->assign('user_id', $user['id']);
         $this->assign('user_username', $user['username']);
-        // Assign các group role đã xử lý
         $this->assign('group1', $group1);
         $this->assign('group2', $group2);
         $this->assign('group3', $group3);
         
         return $this->render();
     }
+    
+    
+    
     
     /**
      * Cập nhật phân quyền của user dựa trên dữ liệu gửi từ form.
@@ -163,7 +172,7 @@ class UserPermission extends BaseController
                     $targets = $this->request->getPost("target_{$roleId}");
                     if (empty($targets) || !is_array($targets) || count($targets) < 1) {
                         $this->session->setFlashdata('error', 'Vui lòng chọn ít nhất một mục cho role: ' . $role['name']);
-                        return redirect()->to("{site_url}user-permission/edit/{$userId}");
+                        return redirect()->to("user-permission/edit/{$userId}");
                     }
                     // Với mỗi target, insert một record
                     foreach ($targets as $target) {
@@ -178,6 +187,6 @@ class UserPermission extends BaseController
         }
         
         $this->session->setFlashdata('success', 'Phân quyền đã được cập nhật.');
-        return redirect()->to("{site_url}user-permission/edit/{$userId}");
+        return redirect()->to("user-permission/edit/{$userId}");
     }
 }
