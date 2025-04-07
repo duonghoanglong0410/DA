@@ -132,11 +132,23 @@ class UserPermission extends BaseController
     // GET: Khoá tài khoản người dùng (lock), cập nhật status về 0
     public function getLock($user_id)
     {
+        $currentUserId = $this->session->userId;
+        
+        // Kiểm tra nếu người dùng cố gắng khóa tài khoản của chính mình
+        if ($currentUserId == $user_id) {
+            return redirect()->to('user-permission/user-list')->with('error', 'Không được khóa tài khoản của chính bạn.');
+        }
+        
+        // Cập nhật status của người dùng cần khóa về 0
         $data = [
             'status'     => 0,
             'updated_at' => date('Y-m-d H:i:s'),
         ];
         $this->userModel->update($user_id, $data);
-        return redirect()->to('user-permission');
+        
+        return redirect()->to('user-permission/user-list');
     }
+    
+    
+    
 }

@@ -22,7 +22,7 @@
           </div>
           <div class="mt-4 d-flex justify-content-between">
             <button type="submit" class="btn btn-primary">Cập nhật thông tin</button>
-            <button type="button" class="btn btn-secondary" onclick="window.location.href='{site_url}home'">Huỷ</button>
+            <button type="button" class="btn btn-secondary" onclick="window.location.href='{site_url}'">Huỷ</button>
           </div>
         </form>
       </div>

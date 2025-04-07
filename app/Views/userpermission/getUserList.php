@@ -3,7 +3,8 @@
     <div class="col-12">
       <div class="form-box">
         <h2 class="mb-4">Danh sách người dùng</h2>
-        <div class="mb-3 text-end">
+        <div class="mb-3 d-flex justify-content-between">
+          <a href="{site_url}" class="btn btn-secondary">Trở về trang chủ</a>
           <a href="{site_url}user-permission/add" class="btn btn-success">Thêm người dùng</a>
         </div>
         <table class="table table-bordered">
@@ -24,7 +25,7 @@
               <td>
                 <a href="{site_url}user/edit/{id}" class="btn btn-sm btn-primary">Sửa thông tin</a>
                 <a href="{site_url}user-permission/edit/{id}" class="btn btn-sm btn-warning">Cập nhật quyền</a>
-                <a href="{site_url}user-permission/lock/{id}" class="btn btn-sm btn-danger" onclick="return confirm('Ban co chac chan muon khoa tai khoan nay khong?');">Khoá tài khoản</a>
+                <a href="{site_url}user-permission/lock/{id}" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc chắn muốn khóa tài khoản này không?');">Khoá tài khoản</a>
               </td>
             </tr>
             {/users}

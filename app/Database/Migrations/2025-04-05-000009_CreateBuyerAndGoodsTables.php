@@ -16,12 +16,12 @@ class CreateBuyerAndGoodsTables extends Migration
                 'auto_increment' => true,
                 'comment'        => 'Khóa chính tự động tăng'
             ],
-            'buyer_name' => [
+            'name' => [
                 'type'       => 'VARCHAR',
                 'constraint' => '150',
                 'comment'    => 'Tên người mua'
             ],
-            'buyer_address' => [
+            'address' => [
                 'type'       => 'VARCHAR',
                 'constraint' => '255',
                 'comment'    => 'Địa chỉ'
