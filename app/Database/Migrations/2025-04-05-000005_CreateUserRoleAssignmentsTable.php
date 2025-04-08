@@ -28,6 +28,11 @@ class CreateUserRoleAssignmentsTable extends Migration
                 'unsigned'   => true,
                 'null'       => true,
             ],
+            'cash_fund_id' => [
+                'type'       => 'INT',
+                'unsigned'   => true,
+                'null'       => true,
+            ],
             'created_at' => [
                 'type' => 'DATETIME',
                 'null' => true,
