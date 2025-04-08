@@ -1,0 +1,42 @@
+Hãy ghi nhớ các Quy định khi viết views:
+
+- Tất cả label cho các input phải được chỉ định label-for để khi bấm vào text các input tương ứng sẽ được click.
+- Trong javascript nếu sau dấu { mà có lệnh if sẽ bị lỗi, vì vậy hãy chèn thêm ghi chú giữa tất cả chúng
+- Các view sử dụng cú pháp parser với biến đơn: {yard_id}, {yard_code}, {yard_name}, {currencies}, {cfCurrencies}, v.v.
+- Không được dùng {if trong view, nếu cần hiển thị/ẩn gì đó hãy dùng biến array, 
+ví dụ trong view có đoạn:
+    {error}
+    <div class="alert alert-danger">
+      {mess}
+    </div>
+    {/error}
+thì khi muốn hiện thông báo ta chỉ cần gán như sau:
+$this->assign('currencies', [['mess' => 'something']])
+- Trước khi chèn js script link hay css vài view, hãy kiểm tra file header.php và footer.php xem đã có chưa, nếu chưa có thì chèn vào header hoặc footer.php, nếu có rồi thì không chèn thêm nữa
+Hay khi cần hiển thị một đoạn status nào đó ta dùng cách gán biến giá trị rỗng hoặc giá trị cần thiết chứ không dùng if.
+- Các đường link (href, form action) trong view có tiền tố {site_url}.
+- Các view có nút "Trở lại" sử dụng onclick="window.history.back();".
+- Các form phải dùng class form-box getDetail được, sử dụng các lớp Bootstrap để căn lề cho các cột.
+- File header.php va foooter.php luôn luôn được tự động thêm vào khi render view, vì vậy hãy loại bỏ hoàn toàn phần đầu và cuối trang nếu có, chỉ cần xây dựng code của trang.
+- Tên file view phải trùng với tên của method, ví dụ method là getAdd thì tên view phải là getAdd, hay method là postEdit thì tên view phải là postEdit
+- Các cửa sổ nhập liệu cần giới hạn chiều rộng trên desktop, full width trên mobile
+Nên dùng theo chuẩn sau:
+<div class="container mt-3">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+      <div class="form-box">
+        <h2 class="mb-4"> <đây là tiêu đề của form> </h2>
+        //Nội dung nằm trong này
+          <div class="mt-4 d-flex justify-content-between">
+            //Danh sách các nút chức năng nằm ở đây, như ví dụ ta có 2 nút
+            <button type="submit" class="btn btn-primary">Cập nhật thông tin</button>
+            <button type="button" class="btn btn-secondary" onclick="window.location.href='{site_url}'">Huỷ</button>
+          </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+Quy tắc này phải được ghi nhớ và áp dụng cho toàn bộ dự án.

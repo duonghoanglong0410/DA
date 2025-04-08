@@ -1,0 +1,22 @@
+Hãy ghi nhớ các lưu ý sau:
+
+- Nội dung giao diện, các câu báo lỗi phải dùng tiếng Việt có dấu, tên biến, tên const, tên function và các loại định danh khác phải dùng tiếng Ahh
+- Sử dụng codeigniter 4 framework
+- Các url đến index của controller mà không có tham số sẽ phải bỏ index trong url, ví dụ return redirect()->to('yard/index'); là sai, đúng phải là return redirect()->to('yard');
+- Viết bằng tiếng Việt có dấu các thông báo, văn bản và ghi chú.
+- Trong tiếng Việt, hãy bỏ dấu ở trọng âm như oà, uý, oè, ... thay vì òa, òe ...
+- Trong bất kỳ url nào đến method, hãy bỏ phương thức (get/post/delete/...) ra khỏi tên method, ví dụ controler yard có method getUpdate thì link tương ứng là yard/update
+Hay ví dụ như action="{site_url}yard/postAdd" và action="{site_url}yard/postEdit/{yard_id}" là url sai, đúng phải là action="{site_url}yard/add" va action="{site_url}yard/edit/{yard_id}" 
+- Nếu tên controller gồm nhiều từ và có chữ hoa thì hãy dùng - rồi phân cách các từ. Ví dụ controller CashFund thì url sẽ là cash-fund
+- Tất cả các truy vấn cơ sở dữ liệu được thực hiện qua model.
+- Nếu đường dẫn đến index của một controller mà không có tham số thì phải bỏ /index đi, ví dụ action="{site_url}yard/index" phải để là action="{site_url}yard", nếu sau index có tham số thì giữ nguyên, ví dụ action="{site_url}yard/index/1" thì vẫn giữ nguyên yard/index/1
+- Trong controller, các lệnh redirect không dùng {site_url}; trong view các liên kết cần dùng {site_url}, phía sau {site_url} không được thêm dấu /, ví dụ {site_url}/yard là sai, ghi đúng phải là {site_url}yard.
+- Phải sử dụng import, không ghi trực tiếp namespace khi dùng, 
+ví dụ sau là không được :
+$model = new \App\Models\WarehouseProductCategoriesModel()
+Dùng đúng phải là
+sử dụng use \App\Models\WarehouseProductCategoriesModel
+$model = new WarehouseProductCategoriesModel()
+- Nếu có sử dụng property trong class (controller, model, ...) thì phải khai báo ở đầu class rồi mới được dùng.
+
+Quy tắc này phải được ghi nhớ và áp dụng cho toàn bộ dự án.

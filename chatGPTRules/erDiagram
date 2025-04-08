@@ -1,0 +1,390 @@
+erDiagram
+    /* 1. buyers */
+    BUYERS {
+      int id PK "auto_increment"
+      varchar(150) name
+      varchar(255) address
+      datetime created_at
+      datetime updated_at
+    }
+
+    /* 2. buyer_currency_funds */
+    BUYER_CURRENCY_FUNDS {
+      int id PK "auto_increment"
+      int buyer_id FK
+      int currency_id FK
+      decimal(15,2) remaining_debt "default 0"
+      datetime created_at
+      datetime updated_at
+    }
+
+    /* 3. can_tu_dong */
+    CAN_TU_DONG {
+      bigint id PK "auto_increment"
+      varchar(50) Msp
+      varchar(150) Tenkhachhang
+      varchar(50) Soxe
+      varchar(150) Loaihang
+      decimal(20,4) KLcotai
+      decimal(20,4) KLkhongtai
+      decimal(20,4) KLhang
+      decimal(20,4) Dongia
+      decimal(20,4) KLgo
+      int Nguoican
+      int Sophieu
+      int Thang
+      int Nam
+      text Ghichu
+      decimal(20,4) phantram
+      decimal(20,4) KLtru
+      varchar(50) Sophieuin
+      decimal(20,4) Thanhtien
+      decimal(20,4) KLkhongtaiR
+      decimal(20,4) KLcotaiR
+      decimal(20,4) KLhangR
+      varchar(50) Tenlaixe
+      varchar(50) Bangchu
+      text TNgaycan
+      decimal(20,4) Giocantruoc
+      datetime Giocansau
+      date Ngaycan
+      decimal(20,4) solanin
+      decimal(20,4) lanin
+      varchar(50) chedo
+    }
+
+    /* 4. cash_funds */
+    CASH_FUNDS {
+      int id PK "auto_increment"
+      varchar(10) fund_code
+      varchar(255) fund_name
+      datetime created_at
+      datetime updated_at
+    }
+
+    /* 5. cash_fund_currencies */
+    CASH_FUND_CURRENCIES {
+      int id PK "auto_increment"
+      int cash_fund_id FK
+      int currency_id FK
+      decimal(15,2) balance "default 0"
+      datetime created_at
+      datetime updated_at
+    }
+
+    /* 6. cash_vouchers */
+    CASH_VOUCHERS {
+      int id PK "auto_increment"
+      int sending_currency_fund_id FK
+      int receiving_currency_fund_id FK
+      decimal(15,2) amount
+      int type
+      int voucher_type
+      int created_by FK
+      int confirmed_by FK "nullable"
+      int approved_by FK "nullable"
+      tinyint status "default 0"
+      datetime created_at
+      datetime updated_at
+    }
+
+    /* 7. currencies */
+    CURRENCIES {
+      int id PK "auto_increment"
+      varchar(100) name
+      varchar(10) abbreviation
+      varchar(10) symbol
+      datetime created_at
+      datetime updated_at
+    }
+
+    /* 8. delivery_adjustments */
+    DELIVERY_ADJUSTMENTS {
+      int id PK "auto_increment"
+      int receipt_id FK
+      decimal(15,2) old_quantity
+      decimal(15,2) new_quantity
+      decimal(15,2) old_price
+      decimal(15,2) new_price
+      tinyint status
+      int created_by FK
+    }
+
+    /* 9. external_purchase_items */
+    EXTERNAL_PURCHASE_ITEMS {
+      int id PK "auto_increment"
+      varchar(50) item_code
+      varchar(20) unit
+      datetime created_at
+      datetime updated_at
+    }
+
+    /* 10. migrations */
+    MIGRATIONS {
+      bigint id PK "auto_increment"
+      varchar(255) version
+      varchar(255) class
+      varchar(255) group
+      varchar(255) namespace
+      int time
+      int batch
+    }
+
+    /* 11. permissions */
+    PERMISSIONS {
+      int id PK "auto_increment"
+      varchar(100) name
+      text description
+      varchar(50) group
+      varchar(100) action
+      varchar(20) method
+      tinyint is_main_menu "default 0"
+      varchar(100) icon_class "nullable"
+      datetime created_at
+      datetime updated_at
+    }
+
+    /* 12. product_categories */
+    PRODUCT_CATEGORIES {
+      int id PK "auto_increment"
+      varchar(100) name
+      varchar(10) abbreviation
+      datetime created_at
+      datetime updated_at
+    }
+
+    /* 13. purchase_yards */
+    PURCHASE_YARDS {
+      int id PK "auto_increment"
+      varchar(10) yard_code
+      varchar(255) yard_name
+      varchar(255) client_api_key
+      tinyint status "default 1"
+      datetime created_at
+      datetime updated_at
+    }
+
+    /* 14. purchase_yard_currency_funds */
+    PURCHASE_YARD_CURRENCY_FUNDS {
+      int id PK "auto_increment"
+      int yard_id FK
+      int currency_id FK
+      decimal(15,2) balance "default 0"
+      datetime created_at
+      datetime updated_at
+    }
+
+    /* 15. purchase_yard_goods_receipts */
+    PURCHASE_YARD_GOODS_RECEIPTS {
+      int id PK "auto_increment"
+      int yard_id FK
+      date input_date
+      varchar(50) vehicle_number
+      int category_id FK
+      decimal(15,2) quantity
+      decimal(15,2) unit_price
+      int created_by FK
+      datetime created_at
+      datetime updated_at
+    }
+
+    /* 16. purchase_yard_product_info */
+    PURCHASE_YARD_PRODUCT_INFO {
+      int id PK "auto_increment"
+      int purchase_yard_id FK
+      int category_id FK
+      int currency_id FK
+      decimal(20,4) stock_weight "default 0.0000"
+      decimal(20,4) average_price "default 0.0000"
+      datetime created_at
+      datetime updated_at
+    }
+
+    /* 17. receipt_adjustments */
+    RECEIPT_ADJUSTMENTS {
+      int id PK "auto_increment"
+      int receipt_id FK
+      decimal(15,2) old_quantity
+      decimal(15,2) new_quantity
+      decimal(15,2) old_price
+      decimal(15,2) new_price
+      tinyint status
+      int created_by FK
+      int approved_by FK
+    }
+
+    /* 18. roles */
+    ROLES {
+      int id PK "auto_increment"
+      varchar(100) name
+      text description
+      tinyint target_type "default 0"
+      datetime created_at
+      datetime updated_at
+    }
+
+    /* 19. role_permission */
+    ROLE_PERMISSION {
+      int id PK "auto_increment"
+      int role_id FK
+      int permission_id FK
+    }
+
+    /* 20. settings */
+    SETTINGS {
+      varchar(255) key PK
+      longtext value
+    }
+
+    /* 21. stock_adjustments */
+    STOCK_ADJUSTMENTS {
+      int id PK "auto_increment"
+      int yard_id FK
+      decimal(15,2) old_stock
+      decimal(15,2) new_stock
+      int created_by FK
+    }
+
+    /* 22. trips */
+    TRIPS {
+      int id PK "auto_increment"
+      varchar(50) code
+      varchar(50) vehicle_number
+      decimal(15,2) total_weight
+      decimal(15,2) net_weight
+      decimal(15,2) clean_weight
+      int product_category_id FK
+      int factory_id FK
+      int purchase_yard_currency_fund_id FK
+      datetime created_at
+    }
+
+    /* 23. trip_details */
+    TRIP_DETAILS {
+      int id PK "auto_increment"
+      int trip_id FK
+      int yard_id FK
+      int buyer_currency_fund_id FK
+      decimal(15,2) export_quantity
+      decimal(15,2) export_price
+      decimal(15,2) total_amount
+      int created_by FK
+    }
+
+    /* 24. users */
+    USERS {
+      int id PK "auto_increment"
+      varchar(255) username "unique"
+      varchar(255) password
+      varchar(255) remember_token "unique, nullable"
+      varchar(255) fullname
+      tinyint status "default 1"
+      datetime created_at
+      datetime updated_at
+    }
+
+    /* 25. user_role_assignments */
+    USER_ROLE_ASSIGNMENTS {
+      int id PK "auto_increment"
+      int user_id FK
+      int role_id FK
+      int purchase_yard_id FK "nullable"
+      int cash_fund_id FK "nullable"
+      int warehouse_id FK "nullable"
+      datetime created_at
+      datetime updated_at
+    }
+
+    /* 26. voucher_details */
+    VOUCHER_DETAILS {
+      int id PK "auto_increment"
+      int cash_voucher_id FK
+      int trip_id FK "nullable"
+      decimal(15,2) paid_debt
+      decimal(15,2) remaining_debt
+      int created_by FK
+      datetime created_at
+    }
+
+    /* 27. warehouse_product_categories */
+    WAREHOUSE_PRODUCT_CATEGORIES {
+      int id PK "auto_increment"
+      int warehouse_id FK
+      int product_category_id FK
+      int product_categories_stock "unsigned, default 0"
+      decimal(15,2) avg_price "default 0"
+      datetime created_at "nullable"
+      datetime updated_at "nullable"
+    }
+
+    /* 28. warehouses */
+    WAREHOUSES {
+      int id PK "auto_increment"
+      varchar(255) name "collate utf8mb4_general_ci, not null"
+      varchar(255) address "collate utf8mb4_general_ci, not null"
+      datetime created_at "default null"
+      datetime updated_at "default null"
+    }
+
+    %% =====================================================
+    %% Các mối quan hệ (foreign key) – hiển thị dưới dạng kết nối
+    %% =====================================================
+
+    BUYER_CURRENCY_FUNDS }o--|| BUYERS : "buyer_id"
+    BUYER_CURRENCY_FUNDS }o--|| CURRENCIES : "currency_id"
+    
+    PURCHASE_YARD_CURRENCY_FUNDS }o--|| PURCHASE_YARDS : "yard_id"
+    PURCHASE_YARD_CURRENCY_FUNDS }o--|| CURRENCIES : "currency_id"
+    
+    CASH_FUND_CURRENCIES }o--|| CASH_FUNDS : "cash_fund_id"
+    CASH_FUND_CURRENCIES }o--|| CURRENCIES : "currency_id"
+    
+    CASH_VOUCHERS }o--|| CASH_FUND_CURRENCIES : "sending_currency_fund_id"
+    CASH_VOUCHERS }o--|| CASH_FUND_CURRENCIES : "receiving_currency_fund_id"
+    CASH_VOUCHERS }o--|| USERS : "created_by"
+    CASH_VOUCHERS }o--|| USERS : "confirmed_by"
+    CASH_VOUCHERS }o--|| USERS : "approved_by"
+
+    DELIVERY_ADJUSTMENTS }o--|| PURCHASE_YARD_GOODS_RECEIPTS : "receipt_id"
+    DELIVERY_ADJUSTMENTS }o--|| USERS : "created_by"
+    
+    PURCHASE_YARD_GOODS_RECEIPTS }o--|| PURCHASE_YARDS : "yard_id"
+    PURCHASE_YARD_GOODS_RECEIPTS }o--|| PRODUCT_CATEGORIES : "category_id"
+    PURCHASE_YARD_GOODS_RECEIPTS }o--|| USERS : "created_by"
+    
+    RECEIPT_ADJUSTMENTS }o--|| PURCHASE_YARD_GOODS_RECEIPTS : "receipt_id"
+    RECEIPT_ADJUSTMENTS }o--|| USERS : "created_by"
+    RECEIPT_ADJUSTMENTS }o--|| USERS : "approved_by"
+    
+    PURCHASE_YARD_PRODUCT_INFO }o--|| PURCHASE_YARDS : "purchase_yard_id"
+    PURCHASE_YARD_PRODUCT_INFO }o--|| PRODUCT_CATEGORIES : "category_id"
+    PURCHASE_YARD_PRODUCT_INFO }o--|| CURRENCIES : "currency_id"
+    
+    TRIPS }o--|| PRODUCT_CATEGORIES : "product_category_id"
+    TRIPS }o--|| BUYERS : "factory_id"
+    TRIPS }o--|| PURCHASE_YARD_CURRENCY_FUNDS : "purchase_yard_currency_fund_id"
+    
+    TRIP_DETAILS }o--|| TRIPS : "trip_id"
+    TRIP_DETAILS }o--|| PURCHASE_YARDS : "yard_id"
+    TRIP_DETAILS }o--|| BUYER_CURRENCY_FUNDS : "buyer_currency_fund_id"
+    TRIP_DETAILS }o--|| USERS : "created_by"
+    
+    STOCK_ADJUSTMENTS }o--|| PURCHASE_YARDS : "yard_id"
+    STOCK_ADJUSTMENTS }o--|| USERS : "created_by"
+    
+    USER_ROLE_ASSIGNMENTS }o--|| USERS : "user_id"
+    USER_ROLE_ASSIGNMENTS }o--|| ROLES : "role_id"
+    USER_ROLE_ASSIGNMENTS }o--|| PURCHASE_YARDS : "purchase_yard_id"
+    USER_ROLE_ASSIGNMENTS }o--|| CASH_FUNDS : "cash_fund_id"
+    USER_ROLE_ASSIGNMENTS }o--|| WAREHOUSES : "warehouse_id"
+
+    
+    VOUCHER_DETAILS }o--|| CASH_VOUCHERS : "cash_voucher_id"
+    VOUCHER_DETAILS }o--|| TRIPS : "trip_id"
+    VOUCHER_DETAILS }o--|| USERS : "created_by"
+    
+    ROLE_PERMISSION }o--|| ROLES : "role_id"
+    ROLE_PERMISSION }o--|| PERMISSIONS : "permission_id"
+    
+    WAREHOUSE_PRODUCT_CATEGORIES }o--|| WAREHOUSES : "warehouse_id"
+    WAREHOUSE_PRODUCT_CATEGORIES }o--|| PRODUCT_CATEGORIES : "product_category_id"

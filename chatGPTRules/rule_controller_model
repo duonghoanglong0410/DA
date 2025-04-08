@@ -1,0 +1,16 @@
+Hãy ghi nhớ các quy định khi viết model:
+
+- Tất cả model phải thừa kế từ BaseModel
+
+Hãy ghi nhớ các Quy định khi viết Controller
+
+- để lấy user id trong controller, hãy dùng lệnh $this->session->userId
+- Các truy vấn dữ liệu luôn được thực hiện qua model. Không được truy vấn database trực tiếp từ controller.
+- Mỗi controller đều phải implement hàm isValidRole($role, $method, $segments) (mặc định trả về true).
+- Controller không được dùng     public function __construct() ma phải dùng initController của codeigniter 4
+- Để return view thì chỉ cần gọi return $this->render(); không cần truyền tham số.
+- Để gán biến ra view, hãy dùng lệnh $this->assign('tên biến', $data); ví dụ $this->assign('currencies', $this->currencyModel->findAll())
+- Không được gán mã HTML vào biến bằng lệnh this->assign, nếu cần hãy dùng các phương pháp ẩn/hiện ở trên.
+
+Quy tắc này phải được ghi nhớ và áp dụng cho toàn bộ dự án.
+

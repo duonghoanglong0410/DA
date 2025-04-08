@@ -7,3 +7,5 @@ use CodeIgniter\Router\RouteCollection;
  */
 $routes->get('/', 'Home::index');
 $routes->get('/trang-chu', 'Home::index');
+$routes->get('/scan', 'Home::getScan');
+
