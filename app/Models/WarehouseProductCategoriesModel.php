@@ -9,7 +9,7 @@ class WarehouseProductCategoriesModel extends BaseModel
     protected $allowedFields = [
         'warehouse_id',
         'product_category_id',
-        'product_categories_stock',
+        'stock',
         'avg_price',
         'created_at',
         'updated_at'
