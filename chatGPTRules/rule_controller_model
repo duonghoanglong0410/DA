@@ -6,10 +6,21 @@ Hãy ghi nhớ các Quy định khi viết Controller
 
 - để lấy user id trong controller, hãy dùng lệnh $this->session->userId
 - Các truy vấn dữ liệu luôn được thực hiện qua model. Không được truy vấn database trực tiếp từ controller.
+- Không được dùng \Config\Database::connect() trong controller hay bất kỳ cách nào khác tương tự, phải thực hiện qua model
 - Mỗi controller đều phải implement hàm isValidRole($role, $method, $segments) (mặc định trả về true).
 - Controller không được dùng     public function __construct() ma phải dùng initController của codeigniter 4
 - Để return view thì chỉ cần gọi return $this->render(); không cần truyền tham số.
 - Để gán biến ra view, hãy dùng lệnh $this->assign('tên biến', $data); ví dụ $this->assign('currencies', $this->currencyModel->findAll())
+- Khi cần hiển thị giá trị thuộc tính bên trong một array, $this->assign cần phải gán giá trị của từng key bên trong, không thể gán toàn bộ array trong một lệnh.
+Ví dụ:
+$warehouse = [
+    'name' => 'Tên kho',
+    'adddress' => 'Địa chỉ kho',
+]
+Nếu cần hiển thị tên kho và địa chỉ kho trên view ta cần 2 lệnh assign:
+$this->assign('name', $warehouse['name']);
+$this->assign('adddress', $warehouse['adddress']);
+rồi trên view dùng {name} và {address} để hiển thị giá trị.
 - Không được gán mã HTML vào biến bằng lệnh this->assign, nếu cần hãy dùng các phương pháp ẩn/hiện ở trên.
 
 Quy tắc này phải được ghi nhớ và áp dụng cho toàn bộ dự án.

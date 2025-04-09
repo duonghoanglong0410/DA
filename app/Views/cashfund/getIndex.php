@@ -24,6 +24,6 @@
         {/funds}
       </tbody>
     </table>
-  </div>
-  <button type="button" class="btn btn-secondary" onclick="window.history.back();">Trở lại</button>
+  </div>  
+  <a class="btn btn-secondary" href="{site_url}cash-fund">Trở lại</a>
 </div>

@@ -265,6 +265,7 @@ erDiagram
       int trip_id FK
       int yard_id FK
       int buyer_currency_fund_id FK
+      int warehouse_id FK "Khóa ngoại, tham chiếu đến warehouses.id (có thể null)"
       decimal(15,2) export_quantity
       decimal(15,2) export_price
       decimal(15,2) total_amount
@@ -309,21 +310,21 @@ erDiagram
     /* 27. warehouse_product_categories */
     WAREHOUSE_PRODUCT_CATEGORIES {
       int id PK "auto_increment"
-      int warehouse_id FK
-      int product_category_id FK
-      int product_categories_stock "unsigned, default 0"
-      decimal(15,2) avg_price "default 0"
-      datetime created_at "nullable"
-      datetime updated_at "nullable"
+      int warehouse_id FK "Khóa ngoại, tham chiếu đến warehouses.id"
+      int product_category_id FK "Khóa ngoại, tham chiếu đến product_categories.id"
+      int stock "Số lượng tồn, mặc định 0"
+      decimal avg_price "Đơn giá trung bình, mặc định 0"
+      datetime created_at "Thời gian tạo bản ghi"
+      datetime updated_at "Thời gian cập nhật bản ghi"
     }
 
     /* 28. warehouses */
     WAREHOUSES {
       int id PK "auto_increment"
-      varchar(255) name "collate utf8mb4_general_ci, not null"
-      varchar(255) address "collate utf8mb4_general_ci, not null"
-      datetime created_at "default null"
-      datetime updated_at "default null"
+      varchar(255) name "Tên kho, không null"
+      varchar(255) address "Địa chỉ kho, không null"
+      datetime created_at "Thời gian tạo bản ghi"
+      datetime updated_at "Thời gian cập nhật bản ghi"
     }
 
     %% =====================================================
@@ -368,6 +369,7 @@ erDiagram
     TRIP_DETAILS }o--|| PURCHASE_YARDS : "yard_id"
     TRIP_DETAILS }o--|| BUYER_CURRENCY_FUNDS : "buyer_currency_fund_id"
     TRIP_DETAILS }o--|| USERS : "created_by"
+    TRIP_DETAILS }o--|| WAREHOUSES : "warehouse_id"
     
     STOCK_ADJUSTMENTS }o--|| PURCHASE_YARDS : "yard_id"
     STOCK_ADJUSTMENTS }o--|| USERS : "created_by"

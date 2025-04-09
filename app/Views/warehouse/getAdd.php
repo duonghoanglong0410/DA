@@ -12,9 +12,9 @@
                         <label for="address" class="form-label">Địa chỉ:</label>
                         <input type="text" class="form-control" id="address" name="address" placeholder="Nhập địa chỉ kho">
                     </div>
-                    <div class="mb-3">
+                    <div class="mt-3 d-flex justify-content-between">
                         <button type="submit" class="btn btn-primary">Thêm Kho</button>
-                        <button class="btn btn-secondary" onclick="window.history.back();">Trở lại</button>
+                        <a class="btn btn-secondary" href="{site_url}user-permission/user-list">Trở lại</a>
                     </div>
                 </form>
             </div>

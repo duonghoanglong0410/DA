@@ -21,9 +21,9 @@
             <input type="text" name="fullname" id="fullname" class="form-control" value="{fullname}" required>
           </div>
           <div id="errorMessage" class="text-danger mb-3"></div>
-          <div class="mt-4">
+          <div class="mt-3 d-flex justify-content-between">
             <button type="submit" class="btn btn-primary">Thêm người dùng</button>
-            <button type="button" class="btn btn-secondary" onclick="window.history.back();">Trở lại</button>
+            <a class="btn btn-secondary" href="{site_url}user-permission/user-list">Trở lại</a>
           </div>
         </form>
       </div>

@@ -1,0 +1,6 @@
+{
+    "files.exclude": {
+        "/app/Language/*": true,
+        "/system/*": true
+    }
+}

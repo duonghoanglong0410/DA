@@ -1,0 +1,7 @@
+Lệnh thêm cột trong db:
+
+viết migration để thêm cột warehouse_id vào table  trip_details
+cột này tham chiếu đến table warehouses.
+đồng thời tôi muốn bổ sung thêm cột này và mối quan hệ vào erDiagram đã vẽ thì thêm vào đâu
+
+

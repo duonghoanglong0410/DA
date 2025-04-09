@@ -13,6 +13,7 @@ class AddWarehouseIdToUserRoleAssignments extends Migration
                 'unsigned'   => true,
                 'null'       => true,
                 'after'      => 'cash_fund_id', // thêm sau cột cash_fund_id, tùy chỉnh theo mong muốn
+                'comment'    => 'Mã của kho quản lý', 
             ],
         ]);
 

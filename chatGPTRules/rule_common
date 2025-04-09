@@ -6,6 +6,7 @@ Hãy ghi nhớ các lưu ý sau:
 - Viết bằng tiếng Việt có dấu các thông báo, văn bản và ghi chú.
 - Trong tiếng Việt, hãy bỏ dấu ở trọng âm như oà, uý, oè, ... thay vì òa, òe ...
 - Trong bất kỳ url nào đến method, hãy bỏ phương thức (get/post/delete/...) ra khỏi tên method, ví dụ controler yard có method getUpdate thì link tương ứng là yard/update
+- Trong bất kỳ url nào các từ phân biệt bằng chữ viết hoa thì phải đổi sang dùng - thay thế. Ví dụ api controller có method getUserSuggestions thì url đến nó phải là api/user-suggestions
 Hay ví dụ như action="{site_url}yard/postAdd" và action="{site_url}yard/postEdit/{yard_id}" là url sai, đúng phải là action="{site_url}yard/add" va action="{site_url}yard/edit/{yard_id}" 
 - Nếu tên controller gồm nhiều từ và có chữ hoa thì hãy dùng - rồi phân cách các từ. Ví dụ controller CashFund thì url sẽ là cash-fund
 - Tất cả các truy vấn cơ sở dữ liệu được thực hiện qua model.
@@ -18,5 +19,13 @@ Dùng đúng phải là
 sử dụng use \App\Models\WarehouseProductCategoriesModel
 $model = new WarehouseProductCategoriesModel()
 - Nếu có sử dụng property trong class (controller, model, ...) thì phải khai báo ở đầu class rồi mới được dùng.
+
+Khi thêm migration:
+- Hãy luôn bổ sung ghi chú bằng tiếng Việt có dấu mỗi cột
+- Luôn hướng dẫn cách bổ sung cập nhật lại erDiagram, nếu chưa upload erDiagram thì hãy nhắc nhở upload
+- Gợi ý tên file migration đảm bảo quy tắc sau:
+<năm hiện tại>-<tháng hiện tại>-<ngày hiện tại>-<6 chữ số tăng dần không trùng>_<tên gợi nhớ liên quan đến hành động và table>.php
+Ví dụ ngày hiện tại là 8 tháng 4 năm 2025, tại lần yêu cầu thứ 17 tôi yêu cầu thêm cột warehouse_id vào table user_role_assignments thì tên file migration là như sau:
+2025-04-08-000017_AddWarehouseIdToUserRoleAssignments.php
 
 Quy tắc này phải được ghi nhớ và áp dụng cho toàn bộ dự án.

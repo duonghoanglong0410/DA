@@ -28,5 +28,5 @@
       </tbody>
     </table>
   </div>
-  <button type="button" class="btn btn-secondary" onclick="window.history.back();">Trở lại</button>
+  <a class="btn btn-secondary" href="{site_url}">Trở lại</a>
 </div>

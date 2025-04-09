@@ -12,9 +12,9 @@
             <label for="abbreviation" class="form-label">Viết tắt</label>
             <input type="text" name="abbreviation" id="abbreviation" class="form-control" value="{abbreviation}" required>
           </div>
-          <div class="mt-4">
+          <div class="mt-3 d-flex justify-content-between">
             <button type="submit" class="btn btn-primary">Lưu</button>
-            <button type="button" class="btn btn-secondary" onclick="window.history.back();">Trở lại</button>
+            <a class="btn btn-secondary" href="{site_url}product-category">Trở lại</a>
           </div>
         </form>
       </div>

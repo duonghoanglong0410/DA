@@ -26,7 +26,7 @@
           <div id="errorMessage" class="text-danger mb-3"></div>
           <div class="mt-4">
             <button type="submit" class="btn btn-primary">Lưu</button>
-            <button type="button" class="btn btn-secondary" onclick="window.history.back();">Trở lại</button>
+            <a class="btn btn-secondary" href="{site_url}buyer">Trở lại</a>          
           </div>
         </form>
       </div>

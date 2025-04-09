@@ -1,35 +1,44 @@
-<?php namespace App\Controllers;
+<?php
 
+namespace App\Controllers;
+
+use CodeIgniter\HTTP\RequestInterface;
+use CodeIgniter\HTTP\ResponseInterface;
+use Psr\Log\LoggerInterface;
 use App\Controllers\BaseController;
 use App\Models\UserModel;
 use App\Models\RoleModel;
 use App\Models\UserRoleAssignmentModel;
-use CodeIgniter\HTTP\RequestInterface;
-use CodeIgniter\HTTP\ResponseInterface;
-use Psr\Log\LoggerInterface;
+use App\Models\PurchaseYardModel;
+use App\Models\CashFundsModel; // Giả sử bạn đã tạo model này
+use App\Constants\Roles; // Nếu cần dùng các hằng số cho role
 
 class UserPermission extends BaseController
 {
     protected $userModel;
     protected $roleModel;
     protected $userRoleModel;
+    protected $purchaseYardModel;
+    protected $cashFundsModel;
 
     // Sử dụng initController của CodeIgniter 4 thay vì __construct()
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {
         parent::initController($request, $response, $logger);
-        $this->userModel     = new UserModel();
-        $this->roleModel     = new RoleModel();
+        $this->userModel = new UserModel();
+        $this->roleModel = new RoleModel();
         $this->userRoleModel = new UserRoleAssignmentModel();
+        $this->purchaseYardModel = new purchaseYardModel();
+        $this->cashFundsModel = new CashFundsModel();        
     }
-
+		
     // Mỗi controller phải implement hàm isValidRole, trả về true mặc định
     public function isValidRole($role, $method, $segments)
     {
         return true;
     }
-
-    // GET: Liệt kê danh sách người dùng (view: getUserList.php)
+    
+    // GET: Liệt kê danh sách người dùng (view: getUserList)
     public function getUserList()
     {
         // Lấy danh sách người dùng có status = 1
@@ -66,6 +75,7 @@ class UserPermission extends BaseController
         unset($user);
 
         $this->assign('users', $users);
+        $this->assign('roles', $roles);
         return $this->render();
     }
 
@@ -168,10 +178,13 @@ class UserPermission extends BaseController
         $this->assign('group1', $group1);
         $this->assign('group2', $group2);
         $this->assign('group3', $group3);
-
+        
         return $this->render();
     }
-
+    
+    
+    
+    
     /**
      * Cập nhật phân quyền của user dựa trên dữ liệu gửi từ form.
      * Với role có target_type = 1 hoặc 2, bắt buộc phải chọn ít nhất một target.
@@ -186,7 +199,7 @@ class UserPermission extends BaseController
         
         // Xoá tất cả phân quyền hiện có của user
         $this->userRoleModel->where('user_id', $userId)->delete();
-
+        
         // Nếu có role được chọn, xử lý từng role
         if (!empty($selectedRoles) && is_array($selectedRoles)) {
             foreach ($selectedRoles as $roleId) {
@@ -215,11 +228,11 @@ class UserPermission extends BaseController
                 }
             }
         }
+        
         $this->session->setFlashdata('success', 'Phân quyền đã được cập nhật.');
-
         return redirect()->to("user-permission/edit/{$userId}");
     }
-}
+
     // GET: Hiển thị form thêm người dùng (view: getAdd.php)
     public function getAdd()
     {

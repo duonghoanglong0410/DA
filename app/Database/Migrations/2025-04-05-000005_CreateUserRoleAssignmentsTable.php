@@ -44,7 +44,7 @@ class CreateUserRoleAssignmentsTable extends Migration
         ]);
         $this->forge->addKey('id', true);
         // Bạn có thể đặt composite unique key để đảm bảo không có bản ghi trùng lặp
-        $this->forge->addUniqueKey(['user_id', 'role_id', 'purchase_yard_id']);
+        $this->forge->addUniqueKey(['user_id', 'role_id', 'purchase_yard_id', 'cash_fund_id', 'warehouse_id']);
         $this->forge->createTable('user_role_assignments');
     }
 
