@@ -1,0 +1,45 @@
+         +-------------------------+
+         |         users           |
+         +-------------------------+
+         | id (PK)                 |
+         | ...                     |
+         +-------------------------+
+
+         +------------------------------------------------------+
+         |                   custom_purposes                    |
+         +------------------------------------------------------+
+         | id (PK)                                              |
+         | purpose_name         | Tên mục đích                 |
+         | amount               | Số tiền liên quan mục đích   |
+         | voucher_date         | Ngày lập phiếu               |
+         | description          | Mô tả phiếu theo dõi         |
+         | created_by           | FK → users.id                |
+         | created_at                                          |
+         | updated_at                                          |
+         +------------------------------------------------------+
+
+         +-----------------------------------------------+
+         |            custom_cash_journals               |
+         +-----------------------------------------------+
+         | id (PK)                                       |
+         | created_date        | Ngày lập phiếu          |
+         | transaction_type    | (thu/chi)               |
+         | amount              | Số tiền                 |
+         | description         | Mô tả giao dịch         |
+         | purpose_id          | FK → custom_purposes.id  |
+         | is_followup         | (1: phiếu theo dõi, 0: khác) |
+         | created_by          | FK → users.id            |
+         | created_at                                    |
+         | updated_at                                    |
+         +-----------------------------------------------+
+
+         +--------------------------------------------------+
+         |           custom_debt_settlements                |
+         +--------------------------------------------------+
+         | id (PK)                                          |
+         | payment_voucher_id    | FK → custom_cash_journals.id (phiếu chi thanh toán)|
+         | followup_voucher_id   | FK → custom_cash_journals.id (phiếu theo dõi)         |
+         | settlement_amount     | Số tiền thanh toán                              |
+         | created_at                                      |
+         | updated_at                                      |
+         +--------------------------------------------------+

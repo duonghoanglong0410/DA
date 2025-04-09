@@ -1,7 +1,7 @@
 Hãy ghi nhớ các lưu ý sau:
 
-- Nội dung giao diện, các câu báo lỗi phải dùng tiếng Việt có dấu, tên biến, tên const, tên function và các loại định danh khác phải dùng tiếng Ahh
 - Sử dụng codeigniter 4 framework
+- Nội dung giao diện, các câu báo lỗi phải dùng tiếng Việt có dấu, tên biến, tên const, tên function và các loại định danh khác phải dùng tiếng Ahh
 - Các url đến index của controller mà không có tham số sẽ phải bỏ index trong url, ví dụ return redirect()->to('yard/index'); là sai, đúng phải là return redirect()->to('yard');
 - Viết bằng tiếng Việt có dấu các thông báo, văn bản và ghi chú.
 - Trong tiếng Việt, hãy bỏ dấu ở trọng âm như oà, uý, oè, ... thay vì òa, òe ...
