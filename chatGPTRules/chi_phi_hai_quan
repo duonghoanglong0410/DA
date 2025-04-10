@@ -27,7 +27,6 @@
          | transaction_type    | (thu/chi)               |
          | amount              | Số tiền                 |
          | description         | Mô tả giao dịch         |
-         | purpose_id          | FK → custom_purposes.id  |
          | is_followup         | (1: phiếu theo dõi, 0: khác) |
          | created_by          | FK → users.id            |
          | created_at                                    |
@@ -45,5 +44,3 @@
          | updated_at                                      |
          +--------------------------------------------------+
 
-
-getPaymentSelection lấy danh sách phiếu theo dõi không đúng, nó cần lấy từ custom_purposes

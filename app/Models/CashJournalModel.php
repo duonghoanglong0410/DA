@@ -13,23 +13,9 @@ class CashJournalModel extends BaseModel
         'transaction_type',
         'amount',
         'description',
-        'purpose_id',
         'created_by'
     ];
 
-    /**
-     * Kiểm tra phiếu theo dõi có xuất hiện trong bảng custom_cash_journals hay không
-     *
-     * @param int $purpose_id ID của phiếu theo dõi trong bảng custom_purposes
-     * @return bool true nếu phiếu được sử dụng, false nếu chưa được sử dụng
-     */
-    public function isPurposeUsed($purpose_id)
-    {
-        $builder = $this->db->table($this->table);
-        $builder->where('purpose_id', $purpose_id);
-        $count = $builder->countAllResults();
-        return ($count > 0);
-    }    
 
     /**
      * Lấy danh sách công nợ đã trả liên quan đến phiếu theo dõi (purpose_id)

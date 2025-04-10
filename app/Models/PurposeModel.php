@@ -12,6 +12,7 @@ class PurposeModel extends BaseModel
         'voucher_date',    // Ngày lập phiếu (DATE)
         'purpose_name',    // Tên mục đích (VARCHAR)
         'amount',          // Số tiền liên quan (DECIMAL)
+        'remaining_amount',// Số tiền chưa thanh toán (DECIMAL)
         'description',     // Mô tả phiếu theo dõi (TEXT)
         'created_by',      // Người lập (INT, FK users.id)
         'voucher_number'   // Số phiếu (VARCHAR)
@@ -26,21 +27,24 @@ class PurposeModel extends BaseModel
      */
     public function getNextVoucherNumber($voucher_date)
     {
-        // Lấy năm và tháng từ ngày lập
+        // Lấy năm và tháng từ ngày lập phiếu
         $year  = date('Y', strtotime($voucher_date));
         $month = date('m', strtotime($voucher_date));
         $prefix = $year . $month; // Ví dụ: "202504"
-
-        // Sử dụng query để lấy số tăng dần cao nhất với điều kiện voucher_number LIKE '<prefix>-%'
-        // Lưu ý: cần loại bỏ phần prefix và dấu '-' để so sánh số
+    
         $builder = $this->builder();
-        // Truy vấn MAX bằng cách dùng SUBSTRING: vị trí bắt đầu là LENGTH(prefix) + 2 (vì có dấu '-')
-        // Chú ý: phương thức CAST(... AS UNSIGNED) để chuyển chuỗi số về kiểu số (với MySQL)
+        // Truy vấn số tăng dần cao nhất theo điều kiện voucher_number LIKE '<prefix>-%'
+        // Lấy số sau dấu '-' bằng cách dùng SUBSTRING, và ép sang kiểu số (CAST ... AS UNSIGNED)
         $builder->select("MAX(CAST(SUBSTRING(voucher_number, " . (strlen($prefix) + 2) . ") AS UNSIGNED)) as max_number", false);
         $builder->like('voucher_number', $prefix . '-', 'after');
         $result = $builder->get()->getRowArray();
-
+    
+        // Nếu không có phiếu nào, số tăng dần là 1, ngược lại là số cao nhất + 1
         $next = empty($result['max_number']) ? 1 : $result['max_number'] + 1;
-        return $prefix . '-' . $next;
+        
+        // Định dạng số tăng dần thành chuỗi 4 ký tự, thêm số 0 ở đầu nếu cần
+        $nextFormatted = sprintf('%04d', $next);
+        return $prefix . '-' . $nextFormatted;
     }
+    
 }

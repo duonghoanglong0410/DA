@@ -1,7 +1,3 @@
-<style>
-  /* Nếu cần bổ sung style riêng cho bảng */
-</style>
-
 <div class="container mt-3">
   <h2 class="mb-4">Danh sách phiếu thu/chi</h2>
   <!-- Nút Lập phiếu chuyển đến trang chọn loại phiếu -->
@@ -25,7 +21,7 @@
         <td>{created_date}</td>
         <td class="text-end">{thu}</td>
         <td class="text-end">{chi}</td>
-        <td class="text-end">{voucher_tracking}</td>
+        <td class="text-end">{!voucher_link!}</td>
         <td>{purpose_name}</td>
         <td>{description}</td>
       </tr>

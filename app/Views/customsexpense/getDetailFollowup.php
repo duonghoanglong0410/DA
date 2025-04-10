@@ -6,7 +6,9 @@
       <p><strong>Số phiếu:</strong> {voucher_number}</p>
       <p><strong>Ngày lập:</strong> {voucher_date}</p>
       <p><strong>Tên mục đích:</strong> {purpose_name}</p>
-      <p><strong>Số tiền:</strong> {amount}</p>
+      <p><strong>Tổng tiền:</strong> {amount}</p>
+      <p><strong>Đã thanh toán:</strong> {settled_amount}</p>
+      <p><strong>Còn lại:</strong> {remaining_amount}</p>
       <p><strong>Mô tả:</strong> {description}</p>
       <p><strong>Người lập phiếu:</strong> {creator_fullname} ({creator_username})</p>
     </div>
@@ -19,7 +21,7 @@
         <thead>
           <tr>
             <th>Ngày lập</th>
-            <th class="text-end">Số tiền</th>
+            <th>Số tiền</th>
             <th>Mô tả</th>
             <th>Người lập</th>
           </tr>
@@ -28,7 +30,7 @@
           {settlements}
           <tr>
             <td>{created_date}</td>
-            <td class="text-end">{amount}</td>
+            <td class="text-end">{settlement_amount}</td>
             <td>{description}</td>
             <td>{creator_fullname} ({creator_username})</td>
           </tr>

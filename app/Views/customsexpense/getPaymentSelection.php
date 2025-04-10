@@ -1,6 +1,6 @@
 <div class="container mt-3">
   <h2 class="mb-4">Lựa chọn phiếu theo dõi để thanh toán</h2>
-  <form action="{site_url}customs-expense/post-payment-followup" method="post">
+  <form action="{site_url}customs-expense/payment-followup" method="post">
     <table class="table table-bordered">
       <thead>
         <tr>
@@ -14,9 +14,9 @@
       </thead>
       <tbody>
         {followups}
-        <tr>
+        <tr style="cursor: pointer;">
           <td>
-            <!-- Thêm thuộc tính data-outstanding để lưu giá trị số chưa thanh toán (raw) -->
+            <!-- Checkbox với thuộc tính data-outstanding chứa giá trị raw -->
             <input type="checkbox" name="selected[]" value="{id}" data-outstanding="{raw_outstanding}">
           </td>
           <td>{voucher_date}</td>
@@ -34,7 +34,6 @@
     </div>
     <div class="mb-3">
       <label for="total_payment" class="form-label">Số tiền thanh toán</label>
-      <!-- Giá trị này mặc định được tính dựa trên checkbox, người dùng có thể thay đổi nhưng không vượt quá tổng số tiền tính được -->
       <input type="number" class="form-control" id="total_payment" name="total_payment" value="0" required step="1">
       <small class="text-muted">Giá trị không được vượt quá tổng số tiền chưa thanh toán của các phiếu đã chọn.</small>
     </div>
@@ -46,31 +45,28 @@
 </div>
 
 <script>
-  // Hàm chuyển đổi chuỗi có dấu phân cách ngàn thành số thực
+  // Hàm chuyển đổi chuỗi số có dấu phân cách ngàn thành số nguyên
   function parseNumber(str) {
-    // Loại bỏ dấu chấm
     return parseInt(str.replace(/\./g, ''), 10) || 0;
   }
 
-  // Hàm tính tổng số tiền chưa thanh toán dựa vào checkbox được chọn
+  // Hàm cập nhật tổng số tiền thanh toán dựa trên các checkbox đã chọn
   function updateTotalPayment() {
     var checkboxes = document.querySelectorAll('input[name="selected[]"]:checked');
     var total = 0;
     checkboxes.forEach(function(chk) {
       total += parseInt(chk.getAttribute('data-outstanding'), 10) || 0;
     });
-    // Cập nhật giá trị input "Số tiền thanh toán"
     document.getElementById('total_payment').value = total;
-    // Cập nhật thuộc tính max cho input nếu muốn sử dụng thuộc tính HTML5
     document.getElementById('total_payment').setAttribute('max', total);
   }
 
-  // Lắng nghe sự kiện thay đổi trạng thái của checkbox
+  // Sự kiện cho các checkbox thay đổi trạng thái
   document.querySelectorAll('input[name="selected[]"]').forEach(function(chk) {
     chk.addEventListener('change', updateTotalPayment);
   });
 
-  // Kiểm tra khi người dùng thay đổi trực tiếp giá trị "Số tiền thanh toán"
+  // Sự kiện kiểm tra khi người dùng thay đổi trực tiếp giá trị "Số tiền thanh toán"
   document.getElementById('total_payment').addEventListener('change', function() {
     var maxVal = parseInt(this.getAttribute('max'), 10) || 0;
     var entered = parseInt(this.value, 10) || 0;
@@ -78,5 +74,19 @@
       alert('Số tiền thanh toán không được vượt quá tổng số tiền chưa thanh toán: ' + maxVal);
       this.value = maxVal;
     }
+  });
+
+  // Thêm event listener cho các hàng của tbody
+  document.querySelectorAll('tbody tr').forEach(function(row) {
+    row.addEventListener('click', function(e) {
+      // Nếu click không phải trực tiếp vào checkbox, toggle trạng thái của checkbox trong dòng đó
+      if (e.target.tagName.toLowerCase() !== 'input') {
+        var checkbox = row.querySelector('input[type="checkbox"]');
+        if (checkbox) {
+          checkbox.checked = !checkbox.checked;
+          updateTotalPayment();
+        }
+      }
+    });
   });
 </script>
