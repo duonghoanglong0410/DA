@@ -34,7 +34,19 @@ class CustomsExpense extends BaseController
     // GET: Hiển thị form lập phiếu theo dõi
     public function getAddFollowup()
     {
-        return $this->render(); // View: getAddFollowup.php
+        // Lấy ngày hiện tại định dạng YYYY-MM-DD
+        $currentDate = date('Y-m-d');
+        $this->assign('current_date', $currentDate);
+    
+        // Lấy danh sách tên mục đích (distinct purpose_name) từ bảng custom_purposes để gợi ý
+        $suggestions = $this->purposeModel
+                            ->select('purpose_name')
+                            ->distinct()
+                            ->findAll();
+        $this->assign('purpose_suggestions', $suggestions);
+    
+        // Render view theo tên method (getAddFollowup.php)
+        return $this->render();
     }
 
     // POST: Xử lý lưu phiếu theo dõi vào custom_purposes
@@ -48,6 +60,97 @@ class CustomsExpense extends BaseController
             'created_by'       => $this->session->userId,
         ];
         $this->purposeModel->insert($data);
+        return redirect()->to('customs-expense/list-followup');
+    }
+
+    /* ---------------------------- Sửa phiếu theo dõi ---------------------------- */
+    
+    // GET: Hiển thị form sửa phiếu theo dõi
+    public function getEditFollowup($id)
+    {
+        // Lấy dữ liệu phiếu theo dõi từ bảng custom_purposes
+        $followup = $this->purposeModel->find($id);
+        if (!$followup) {
+            session()->setFlashdata('error', 'Không tìm thấy phiếu cần sửa.');
+            return redirect()->to('customs-expense/list-followup');
+        }
+        
+        // Assign từng trường của phiếu theo dõi cho view
+        $this->assign('id', $followup['id']);
+        $this->assign('voucher_date', $followup['voucher_date']);  // giả sử lưu theo định dạng yyyy-mm-dd (view sẽ hiển thị định dạng theo yêu cầu nếu cần)
+        $this->assign('purpose_name', $followup['purpose_name']);
+        
+        /* Kiểm tra xem phiếu đã được sử dụng trong custom_cash_journals hay chưa */
+        $isUsed = $this->cashJournalModel->isPurposeUsed($followup['id']);
+        if ($isUsed) {
+            // Nếu phiếu đã được sử dụng thì không cho cập nhật số tiền: hiển thị readonly và thông báo
+            $this->assign('readonly', 'readonly');
+            $this->assign('amount_note', 'Số tiền không thể cập nhật vì phiếu đã được sử dụng');
+        } else {
+            $this->assign('readonly', '');
+            $this->assign('amount_note', '');
+        }
+        // Định dạng số tiền theo quy tắc Việt Nam (không có phần lẻ, phân cách ngàn bằng dấu chấm)
+        $formattedAmount = number_format($followup['amount'], 0, ',', '.');
+        $this->assign('amount', $formattedAmount);
+        $this->assign('description', $followup['description']);
+
+        // Lấy danh sách gợi ý tên mục đích (distinct purpose_name) từ bảng custom_purposes
+        $suggestions = $this->purposeModel
+                            ->select('purpose_name')
+                            ->distinct()
+                            ->findAll();
+        $this->assign('purpose_suggestions', $suggestions);
+
+        return $this->render(); // View: getEditFollowup.php
+    }
+
+    // POST: Xử lý cập nhật phiếu theo dõi
+    public function postEditFollowup($id)
+    {
+        // Kiểm tra lại xem phiếu đã được sử dụng hay chưa
+        $isUsed = $this->cashJournalModel->isPurposeUsed($id);
+        if ($isUsed) {
+            // Nếu phiếu đã được sử dụng, không cho cập nhật số tiền: lấy số tiền gốc
+            $original = $this->purposeModel->find($id);
+            $updatedAmount = $original['amount'];
+        } else {
+            $updatedAmount = $this->request->getPost('amount');
+        }
+        
+        $data = [
+            'voucher_date' => $this->request->getPost('voucher_date'),
+            'purpose_name' => $this->request->getPost('purpose_name'),
+            'amount'       => $updatedAmount,
+            'description'  => $this->request->getPost('description')
+        ];
+        
+        if ($this->purposeModel->update($id, $data)) {
+            session()->setFlashdata('success', 'Cập nhật phiếu thành công.');
+        } else {
+            session()->setFlashdata('error', 'Cập nhật phiếu thất bại.');
+        }
+        return redirect()->to('customs-expense/list-followup');
+    }
+
+    /**
+     * GET: Xoá phiếu theo dõi.
+     * Chỉ cho phép xoá nếu phiếu chưa xuất hiện ở custom_cash_journals.purpose_id.
+     *
+     * @param int $id ID của phiếu theo dõi trong bảng custom_purposes
+     * @return Response Redirect về danh sách phiếu theo dõi
+     */
+    public function getDeleteFollowup($id)
+    {
+        // Kiểm tra xem phiếu theo dõi đã được sử dụng trong custom_cash_journals hay chưa
+        if ($this->cashJournalModel->isPurposeUsed($id)) {
+            // Nếu đã được sử dụng, thông báo lỗi và redirect về danh sách
+            session()->setFlashdata('error', 'Phiếu đã được sử dụng, không thể xoá.');
+            return redirect()->to('customs-expense/list-followup');
+        }
+        // Nếu chưa được sử dụng, xoá phiếu theo dõi
+        $this->purposeModel->delete($id);
+        session()->setFlashdata('success', 'Xoá phiếu thành công.');
         return redirect()->to('customs-expense/list-followup');
     }
 
@@ -172,10 +275,37 @@ class CustomsExpense extends BaseController
     // GET: Hiển thị danh sách phiếu theo dõi (lấy từ bảng custom_purposes)
     public function getListFollowup()
     {
+        // Lấy toàn bộ phiếu theo dõi từ bảng custom_purposes
         $followups = $this->purposeModel->findAll();
+    
+        // Với mỗi phiếu theo dõi, định dạng lại ngày và số tiền theo quy tắc Việt Nam,
+        // đồng thời xử lý block can_delete theo quy tắc đã ghi nhớ.
+        foreach ($followups as $key => $followup) {
+            // Định dạng ngày: chuyển từ yyyy-mm-dd sang dd-mm-yyyy
+            $formattedDate = date('d-m-Y', strtotime($followup['voucher_date']));
+            // Định dạng số: không có phần lẻ, phân cách ngàn bằng dấu chấm
+            $formattedAmount = number_format($followup['amount'], 0, ',', '.');
+    
+            $followups[$key]['voucher_date'] = $formattedDate;
+            $followups[$key]['amount']       = $formattedAmount;
+    
+            // Kiểm tra xem phiếu theo dõi đã được sử dụng trong bảng custom_cash_journals (trong cột purpose_id) hay chưa
+            if (!$this->cashJournalModel->isPurposeUsed($followup['id'])) {
+                // Nếu chưa được sử dụng, gán block can_delete (với biến can_delete_id để tránh lỗi khi truy xuất thuộc tính của item cấp cao)
+                $followups[$key]['can_delete'] = [['can_delete_id' => $followup['id']]];
+            } else {
+                // Nếu phiếu đã được sử dụng, gán block can_delete là mảng rỗng
+                $followups[$key]['can_delete'] = [];
+            }
+        }
+    
+        // Assign biến followups (với các trường đã được định dạng) ra view
         $this->assign('followups', $followups);
-        return $this->render(); // View: getListFollowup.php
+        return $this->render(); // Render view: getListFollowup.php
     }
+    
+    
+    
 
     /* ---------------------------- 9.5 Danh sách phiếu thu/chi ---------------------------- */
 

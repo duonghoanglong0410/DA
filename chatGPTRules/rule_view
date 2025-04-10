@@ -12,6 +12,24 @@ ví dụ trong view có đoạn:
     {/error}
 thì khi muốn hiện thông báo ta chỉ cần gán như sau:
 $this->assign('currencies', [['mess' => 'something']])
+- Cách khác để ẩn/hiện một thứ là dùng thuộc tính display của css, ta assign một biến giá rỗng (hiện) hoặc none (ẩn) để thay đổi giá trị cúa display cho một thẻ nào đó.
+- Lưu ý khi dùng array để ẩn hiện là bên trong nếu truy xuất lại thuộc tính của item cấp cao hơn trước đó sẽ bị lỗi, ví dụ như sau bên trong can_delete có lấy {id} thì sẽ gây lỗi:
+      {followups}
+          {id}
+          {can_delete}
+          <a href="{site_url}delete/{id}">Xoá phiếu</a>
+          {/can_delete}
+      {/followups}
+trường hợp này hãy chuyển qua dùng thay đổi display nếu được, hoặc dùng cách sau:
+  1. Trên view bổ sung thêm biến can_delete_id
+      {followups}
+          {id}
+          {can_delete}
+          <a href="{site_url}delete/{can_delete_id}">Xoá phiếu</a>
+          {/can_delete}
+      {/followups}
+  2. Trong controller bổ sung thêm lệnh gán như sau cho từng dòng:
+      followups[$key]['can_delete'] = [['can_delete_id' => followups[$key]['id']]];
 - Trước khi chèn js script link hay css vài view, hãy kiểm tra file header.php và footer.php xem đã có chưa, nếu chưa có thì chèn vào header hoặc footer.php, nếu có rồi thì không chèn thêm nữa
 Hay khi cần hiển thị một đoạn status nào đó ta dùng cách gán biến giá trị rỗng hoặc giá trị cần thiết chứ không dùng if.
 - Các đường link (href, form action) trong view có tiền tố {site_url}.
@@ -37,6 +55,7 @@ Nên dùng theo chuẩn sau:
     </div>
   </div>
 </div>
-
+- Mặc định các con số hiển thị theo định dạng Việt Nam: không có phần lẻ thập phân, phân cách phần ngàn bằng dấu . đồng thời nếu đây là một giá trị hiển thị trong một cột của table thì cần căn lề phải.
+- Mặc định ngày tháng hiển thị theo định dạng Việt Nam: dd-mm-yyyy
 
 Quy tắc này phải được ghi nhớ và áp dụng cho toàn bộ dự án.
