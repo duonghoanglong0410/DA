@@ -26,6 +26,9 @@
           <a class="btn btn-primary" href="{site_url}warehouse/add">Thêm kho mới</a>
           <a class="btn btn-secondary" href="{site_url}warehouse">Trở lại</a>
         </div>
+
+        <!-- Hiển thị thông tin phân trang -->
+        {!pagination!}
       </div>
     </div>
   </div>

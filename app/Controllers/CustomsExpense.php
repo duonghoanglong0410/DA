@@ -13,6 +13,10 @@ class CustomsExpense extends BaseController
     protected $debtSettlementModel;
     protected $purposeModel;
 
+    // Constants for pagination
+    const DEFAULT_PER_PAGE = 10;
+    const PER_PAGE_OPTIONS = [10, 20, 50, 100];
+
     // Sử dụng initController thay vì __construct
     public function initController($request, $response, $logger)
     {
@@ -402,19 +406,24 @@ class CustomsExpense extends BaseController
     // GET: Hiển thị danh sách phiếu theo dõi (lấy từ bảng custom_purposes)
     public function getListFollowup()
     {
-        $followups = $this->purposeModel->findAll();
+        // Get total count of followups
+        $totalFollowups = $this->purposeModel->countAll();
+
+        // Sử dụng phương thức handlePagination từ BaseController
+        $pagination = $this->handlePagination($totalFollowups);
+
+        // Get paginated followups using customPaginate
+        $followups = $this->purposeModel->customPaginate($pagination['perPage'], $pagination['page']);
     
         foreach ($followups as $key => $followup) {
             $formattedDate = date('d-m-Y', strtotime($followup['voucher_date']));
             $formattedAmount = number_format($followup['amount'], 0, ',', '.');
-            // Định dạng trường remaining_amount (số tiền chưa thanh toán)
             $formattedRemaining = number_format($followup['remaining_amount'], 0, ',', '.');
     
             $followups[$key]['voucher_date'] = $formattedDate;
-            $followups[$key]['amount']       = $formattedAmount;
+            $followups[$key]['amount'] = $formattedAmount;
             $followups[$key]['remaining_amount'] = $formattedRemaining;
     
-            // Kiểm tra xem phiếu theo dõi đã được sử dụng trong custom_debt_settlements chưa
             $settlements = $this->debtSettlementModel->getSettlementsByPurpose($followup['id']);
             if (empty($settlements)) {
                 $followups[$key]['can_delete'] = [['can_delete_id' => $followup['id']]];
@@ -422,9 +431,9 @@ class CustomsExpense extends BaseController
                 $followups[$key]['can_delete'] = [];
             }
         }
-    
+        
         $this->assign('followups', $followups);
-        return $this->render(); // View: getListFollowup.php
+        return $this->render();
     }
     
     
@@ -435,8 +444,14 @@ class CustomsExpense extends BaseController
     // GET: Lấy danh sách phiếu thu/chi và hiển thị cùng cột mã phiếu theo dõi (nếu có)
     public function getListCashJournal()
     {
-        // Lấy tất cả phiếu giao dịch từ bảng custom_cash_journals
-        $journals = $this->cashJournalModel->findAll();
+        // Get total count of journals
+        $totalJournals = $this->cashJournalModel->countAll();
+
+        // Sử dụng phương thức handlePagination từ BaseController
+        $pagination = $this->handlePagination($totalJournals);
+
+        // Get paginated journals using customPaginate
+        $journals = $this->cashJournalModel->customPaginate($pagination['perPage'], $pagination['page']);
         
         foreach ($journals as $key => $journal) {
             // Định dạng ngày: từ yyyy-mm-dd sang dd-mm-yyyy
@@ -475,7 +490,7 @@ class CustomsExpense extends BaseController
         }
         
         $this->assign('journals', $journals);
-        return $this->render(); // Sử dụng view: getListCashJournal.php
+        return $this->render();
     }
     
     

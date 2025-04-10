@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Constants\Constants;
 use CodeIgniter\Controller;
 use CodeIgniter\HTTP\CLIRequest;
 use CodeIgniter\HTTP\IncomingRequest;
@@ -225,4 +226,79 @@ abstract class BaseController extends Controller
 
         return $content;
     }
+
+    /**
+     * Xử lý phân trang và gán các biến cần thiết cho view
+     * 
+     * @param object $controller Controller hiện tại
+     * @param int $totalRecords Tổng số bản ghi
+     * @return void
+     */
+    public function handlePagination($totalRecords)
+    {
+        // Lấy trang hiện tại và số bản ghi trên mỗi trang từ query string
+        $page = $this->request->getGet('page') ?? 1;
+        $perPage = $this->request->getGet('per_page') ?? Constants::DEFAULT_PER_PAGE;
+        
+        // Validate per_page value
+        if (!in_array($perPage, Constants::PER_PAGE_OPTIONS)) {
+            $perPage = Constants::DEFAULT_PER_PAGE;
+        }
+
+        // Tính tổng số trang
+        $totalPages = ceil($totalRecords / $perPage);
+
+        // Prepare pagination data
+        $pagination = [];
+        
+        // Add previous button
+        $pagination[] = [
+            'display' => '«',
+            'url' => '?page=' . ($page - 1) . '&per_page=' . $perPage,
+            'is_active' => false,
+            'is_disabled' => $page <= 1
+        ];
+        
+        // Add page numbers
+        for ($i = 1; $i <= $totalPages; $i++) {
+            $pagination[] = [
+                'display' => $i,
+                'url' => '?page=' . $i . '&per_page=' . $perPage,
+                'is_active' => $i == $page,
+                'is_disabled' => false
+            ];
+        }
+        
+        // Add next button
+        $pagination[] = [
+            'display' => '»',
+            'url' => '?page=' . ($page + 1) . '&per_page=' . $perPage,
+            'is_active' => false,
+            'is_disabled' => $page >= $totalPages
+        ];
+
+        // Prepare per page options
+        $perPageOptions = [];
+        foreach (Constants::PER_PAGE_OPTIONS as $option) {
+            $perPageOptions[] = [
+                'value' => $option,
+                'is_selected' => $option == $perPage,
+                'url' => '?page=1&per_page=' . $option
+            ];
+        }
+
+        
+        // Gán các biến cho view
+        $this->assign('pagination_links', $pagination);
+        $this->assign('per_page_options', $perPageOptions);
+        $this->assign('current_per_page', $perPage);
+
+        $this->assign('pagination', $this->render("modules/pagination"));
+        
+        // Trả về page và perPage để controller có thể sử dụng
+        return [
+            'page' => $page,
+            'perPage' => $perPage
+        ];
+    }    
 }

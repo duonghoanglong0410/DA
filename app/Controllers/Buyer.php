@@ -9,6 +9,8 @@ use App\Models\CashVoucherModel;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Psr\Log\LoggerInterface;
+use App\Helpers\PaginationHelper;
+use App\Constants\Constants;
 
 class Buyer extends BaseController
 {
@@ -38,7 +40,15 @@ class Buyer extends BaseController
     // GET: Hiển thị danh sách nhà máy (view: getIndex.php)
     public function getIndex()
     {
-        $buyers = $this->buyerModel->findAll();
+        // Get total count of buyers
+        $totalBuyers = $this->buyerModel->countAll();
+
+        // Sử dụng phương thức handlePagination từ BaseController
+        $pagination = $this->handlePagination($totalBuyers);
+
+        // Get paginated buyers using customPaginate
+        $buyers = $this->buyerModel->customPaginate($pagination['perPage'], $pagination['page']);
+        
         $this->assign('buyers', $buyers);
         return $this->render();
     }

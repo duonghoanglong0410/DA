@@ -37,6 +37,13 @@ abstract class BaseModel extends Model
         // shuffle(self::$chartColorCode);
     }
 
+    public function customPaginate($perPage, $page)
+    {
+        $offset = ($page - 1) * $perPage;
+        return $this->orderBy('created_at', 'DESC')
+                   ->findAll($perPage, $offset);
+    }
+        
     protected function getNextChartColorCode()
     {
         if (count(self::$chartColorCode) > 0)

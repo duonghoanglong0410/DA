@@ -36,4 +36,6 @@
       {/followups}
     </tbody>
   </table>
+  
+  {!pagination!}
 </div>

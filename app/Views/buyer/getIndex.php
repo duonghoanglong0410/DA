@@ -28,7 +28,8 @@
             {/buyers}
           </tbody>
         </table>
-      </div>
+        
+        {!pagination!}
     </div>
   </div>
 </div>

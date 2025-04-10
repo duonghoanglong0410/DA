@@ -28,4 +28,6 @@
       {/journals}
     </tbody>
   </table>
+  
+  {!pagination!}
 </div>

@@ -38,9 +38,17 @@ class Warehouse extends BaseController
      */
     public function getIndex()
     {
-        $warehouses = $this->warehousesModel->getWarehousesWithManagers();
-        // Ở danh sách kho, ta có thể gán toàn bộ mảng vì sau đó vòng lặp trên view
-        $this->assign('warehouses', $warehouses);
+        // Tính tổng số kho
+        $totalWarehouses = $this->warehousesModel->countAll();
+
+        // Sử dụng phương thức handlePagination từ BaseController
+        $pagination = $this->handlePagination($totalWarehouses);
+
+        // Lấy danh sách kho đã phân trang
+        $warehouses = $this->warehousesModel->customPaginate($pagination['perPage'], $pagination['page']);
+
+        // Gán dữ liệu vào view
+        $this->assign('warehouses', $warehouses);        
         return $this->render();
     }
 

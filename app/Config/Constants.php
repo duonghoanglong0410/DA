@@ -78,3 +78,14 @@ defined('EXIT_DATABASE')       || define('EXIT_DATABASE', 8);       // database 
 defined('EXIT__AUTO_MIN')      || define('EXIT__AUTO_MIN', 9);      // lowest automatically-assigned error code
 defined('EXIT__AUTO_MAX')      || define('EXIT__AUTO_MAX', 125);    // highest automatically-assigned error code
 
+/*
+ | --------------------------------------------------------------------------
+ | Pagination Constants
+ | --------------------------------------------------------------------------
+ |
+ | Define default number of items per page and available options
+ | for pagination throughout the application.
+ */
+defined('DEFAULT_PER_PAGE') || define('DEFAULT_PER_PAGE', 10);
+defined('PER_PAGE_OPTIONS') || define('PER_PAGE_OPTIONS', [10, 20, 50, 100]);
+

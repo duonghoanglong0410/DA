@@ -91,4 +91,6 @@ class CashJournalModel extends BaseModel
         }
         return $total;
     }
+
+
 }

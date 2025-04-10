@@ -13,6 +13,8 @@
 - Trong controller, lệnh redirect không sử dụng `{site_url}`; trong view, liên kết cần sử dụng `{site_url}`, và không thêm dấu gạch chéo sau `{site_url}`.
 - Sử dụng import, không ghi trực tiếp namespace khi sử dụng.
 - Nếu sử dụng thuộc tính trong một class (controller, model, ...), khai báo nó ở đầu class trước khi sử dụng.
+- Biến assign từ controller sẽ mặc định được xử lý qua htmlentities, vì vậy không được dùng mã html hay ký tự đã encode. Nếu muốn dùng mã html thì biến trên view phải được bọc bằng !. Ví dụ: {!htmlcode!}
+- Code phân trang cần làm như sau: Trong controller cần gọi handlePagination của basecontroller: $pagination = $this->handlePagination($totalBuyers). Để lấy data thì gọi customPaginate($pagination['perPage'], $pagination['page']). Trong view đặt thẻ sau vào vị trí cần hiện UI phân trang: {!pagination!}
 
 ## Quy định về Controller và Model
 - Tất cả các model phải kế thừa từ `BaseModel`.

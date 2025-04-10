@@ -25,5 +25,7 @@
       </tbody>
     </table>
   </div>  
-  <a class="btn btn-secondary" href="{site_url}cash-fund">Trở lại</a>
+
+  {!pagination!} 
+  
 </div>
