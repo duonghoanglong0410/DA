@@ -1,0 +1,52 @@
+{
+  "common_rules": {
+    "framework": "CodeIgniter 4",
+    "language": {
+      "interface": "Tiếng Việt có dấu",
+      "identifiers": "Tiếng Anh"
+    },
+    "url_formatting": {
+      "index_omission": "Bỏ 'index' trong URL không có tham số",
+      "method_naming": "Loại bỏ loại phương thức khỏi tên phương thức trong URL",
+      "uppercase_to-hyphen": "Thay thế phân biệt chữ hoa bằng dấu gạch ngang"
+    },
+    "database_queries": "Thực hiện qua model",
+    "redirects": {
+      "controller": "Không sử dụng {site_url}",
+      "view": "Sử dụng {site_url} không có dấu gạch chéo"
+    },
+    "namespace_usage": "Sử dụng import, không ghi trực tiếp namespace",
+    "class_properties": "Khai báo ở đầu class"
+  },
+  "controller_model_rules": {
+    "inheritance": "Tất cả các model phải kế thừa từ BaseModel",
+    "session_handling": "Sử dụng $this->session->userId để lấy user ID",
+    "data_queries": "Phải thực hiện qua model",
+    "database_connection": "Không sử dụng \\Config\\Database::connect() trong controller",
+    "role_validation": "Triển khai isValidRole($role, $method, $segments) trong mỗi controller",
+    "constructor_usage": "Sử dụng initController thay vì public function __construct()",
+    "view_return": "Sử dụng return $this->render() để trả về view",
+    "variable_assignment": "Sử dụng $this->assign('tên biến', $data) để gán biến ra view",
+    "html_assignment": "Không gán mã HTML bằng $this->assign"
+  },
+  "view_rules": {
+    "label_for": "Tất cả các label cho input phải chỉ định label-for",
+    "javascript_usage": "Chèn ghi chú giữa { và lệnh if",
+    "parser_syntax": "Sử dụng cú pháp parser với biến đơn",
+    "conditional_display": "Sử dụng biến array hoặc thuộc tính display của CSS để ẩn/hiện",
+    "script_insertion": "Kiểm tra header.php và footer.php trước khi chèn JS/CSS",
+    "link_prefix": "Liên kết trong view có tiền tố {site_url}",
+    "back_button": "Sử dụng onclick=\"window.history.back();\" cho nút 'Trở lại'",
+    "form_class": "Form phải sử dụng class form-box getDetail",
+    "header_footer": "Loại bỏ header và footer nếu có, chỉ xây dựng code của trang",
+    "view_naming": "Tên file view phải trùng với tên method",
+    "input_window": "Các cửa sổ nhập liệu cần giới hạn chiều rộng trên desktop, full width trên mobile.",
+    "number_format": "Mặc định các con số hiển thị theo định dạng Việt Nam: không có phần lẻ thập phân, phân cách phần ngàn bằng dấu .",
+    "date_format": "Mặc định ngày tháng hiển thị theo định dạng Việt Nam: dd-mm-yyyy."
+  },
+  "migration_guidelines": {
+    "comments": "Bổ sung ghi chú bằng tiếng Việt có dấu cho mỗi cột",
+    "er_diagram": "Hướng dẫn cách cập nhật ER diagram",
+    "file_naming": "Theo quy tắc: <năm>-<tháng>-<ngày>-<6 chữ số>_<tên gợi nhớ>.php"
+  }
+} 

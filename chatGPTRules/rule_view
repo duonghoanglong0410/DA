@@ -34,7 +34,7 @@ trường hợp này hãy chuyển qua dùng thay đổi display nếu được,
 Hay khi cần hiển thị một đoạn status nào đó ta dùng cách gán biến giá trị rỗng hoặc giá trị cần thiết chứ không dùng if.
 - Các đường link (href, form action) trong view có tiền tố {site_url}.
 - Các view có nút "Trở lại" sử dụng onclick="window.history.back();".
-- Các form phải dùng class form-box getDetail được, sử dụng các lớp Bootstrap để căn lề cho các cột.
+- Các form phải dùng class form-box getDetail, sử dụng các lớp Bootstrap để căn lề cho các cột.
 - File header.php va foooter.php luôn luôn được tự động thêm vào khi render view, vì vậy hãy loại bỏ hoàn toàn phần đầu và cuối trang nếu có, chỉ cần xây dựng code của trang.
 - Tên file view phải trùng với tên của method, ví dụ method là getAdd thì tên view phải là getAdd, hay method là postEdit thì tên view phải là postEdit
 - Các cửa sổ nhập liệu cần giới hạn chiều rộng trên desktop, full width trên mobile

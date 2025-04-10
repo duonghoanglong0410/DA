@@ -10,7 +10,7 @@
          +------------------------------------------------------+
          | id (PK)                                              |
          | purpose_name         | Tên mục đích                 |
-         | purpose_name         | Tên mục đích                 |
+         | voucher_number       | Mã phiếu                     |
          | amount               | Số tiền liên quan mục đích   |
          | voucher_date         | Ngày lập phiếu               |
          | description          | Mô tả phiếu theo dõi         |
@@ -39,17 +39,11 @@
          +--------------------------------------------------+
          | id (PK)                                          |
          | payment_voucher_id    | FK → custom_cash_journals.id (phiếu chi thanh toán)|
-         | followup_voucher_id   | FK → custom_cash_journals.id (phiếu theo dõi)         |
+         | followup_voucher_id   | FK → custom_purposes.id (phiếu theo dõi)         |
          | settlement_amount     | Số tiền thanh toán                              |
          | created_at                                      |
          | updated_at                                      |
          +--------------------------------------------------+
 
 
-bây giờ chuyển qua các tính năng quản lý phiếu thu, phiếu chi. 
-Trong danh sách phiếu thu/chi hãy bổ sung thêm nút lập phiếu, khi bấm lập phiếu thì ra trang chọn loại phiếu gồm 3 mục:
-Lập phiếu thu: bấm chọn sẽ chuyển sang form lập phiếu thu tiền (getAddCashReceipt)
-Thanh toán công nợ: bấm sẽ chuyển sang Hiển thị danh sách phiếu theo dõi chưa thanh toán (getPaymentSelection)
-Phiếu chi khác: bấm sẽ chuyển sang form lập phiếu thanh toán công nợ không theo phiếu theo dõi (getPaymentNonFollowup)
-
-Trong danh sách phiếu thu/thi, hãy thêm một cột hiển thị mã phiếu theo dõi (là purpose_id nhưng thêm ở định dạng P<purpose_id pre-fill 5 chữ số>, 
+getPaymentSelection lấy danh sách phiếu theo dõi không đúng, nó cần lấy từ custom_purposes

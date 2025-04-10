@@ -14,7 +14,6 @@ class CashJournalModel extends BaseModel
         'amount',
         'description',
         'purpose_id',
-        'is_followup',
         'created_by'
     ];
 
@@ -53,8 +52,7 @@ class CashJournalModel extends BaseModel
     public function getUnsettledFollowups()
     {
         $builder = $this->builder();
-        $builder->where('transaction_type', 'chi')
-                ->where('is_followup', 1);
+        $builder->where('transaction_type', 'chi');
         $results = $builder->get()->getResultArray();
         foreach ($results as &$voucher) {
             $settled = $this->getSettledAmount($voucher['id']);
@@ -78,7 +76,6 @@ class CashJournalModel extends BaseModel
     {
         $builder = $this->builder();
         $builder->where('transaction_type', 'chi')
-                ->where('is_followup', 1)
                 ->orderBy('created_date', 'ASC');
         $results = $builder->get()->getResultArray();
         foreach ($results as &$voucher) {

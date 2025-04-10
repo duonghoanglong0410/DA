@@ -6,7 +6,7 @@
         <form action="{site_url}customs-expense/payment-non-followup" method="post">
           <div class="mb-3">
             <label for="payment_date" class="form-label">Ngày thanh toán</label>
-            <input type="date" class="form-control" id="payment_date" name="payment_date" required>
+            <input type="date" class="form-control" id="payment_date" name="payment_date" value="{current_date}" required>
           </div>
           <div class="mb-3">
             <label for="amount" class="form-label">Số tiền thanh toán</label>

@@ -6,7 +6,7 @@
         <form action="{site_url}customs-expense/add-cash-receipt" method="post">
           <div class="mb-3">
             <label for="created_date" class="form-label">Ngày lập phiếu</label>
-            <input type="date" class="form-control" id="created_date" name="created_date" required>
+            <input type="date" class="form-control" id="created_date" name="created_date" value="{current_date}" required>
           </div>
           <div class="mb-3">
             <label for="amount" class="form-label">Số tiền</label>

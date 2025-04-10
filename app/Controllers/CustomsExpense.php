@@ -210,7 +210,10 @@ class CustomsExpense extends BaseController
     // GET: Hiển thị form lập phiếu thu tiền
     public function getAddCashReceipt()
     {
-        return $this->render(); // View: getAddCashReceipt.php
+        // Lấy ngày hiện tại theo định dạng YYYY-MM-DD
+        $currentDate = date('Y-m-d');
+        $this->assign('current_date', $currentDate);
+        return $this->render();
     }
 
     // POST: Xử lý lưu phiếu thu tiền khi form được submit
@@ -221,7 +224,6 @@ class CustomsExpense extends BaseController
             'amount'           => $this->request->getPost('amount'),
             'description'      => $this->request->getPost('description'),
             'transaction_type' => 'thu',
-            'is_followup'      => 0,
             'created_by'       => $this->session->userId,
         ];
         $this->cashJournalModel->insert($data);
@@ -233,10 +235,36 @@ class CustomsExpense extends BaseController
     // 9.3.1 - GET: Hiển thị danh sách phiếu theo dõi chưa thanh toán
     public function getPaymentSelection()
     {
-        $followups = $this->cashJournalModel->getUnsettledFollowups();
-        $this->assign('followups', $followups);
+        // Lấy tất cả phiếu theo dõi từ custom_purposes
+        $followups = $this->purposeModel->findAll();
+        $unsettledFollowups = [];
+        
+        // Với mỗi phiếu, tính số đã thanh toán và số chưa thanh toán
+        foreach ($followups as $followup) {
+            $settled = $this->cashJournalModel->getSettledAmount($followup['id']);
+            // $followup['amount'] là giá trị số (chưa định dạng)
+            $outstandingAmount = $followup['amount'] - $settled;
+            
+            if ($outstandingAmount > 0) {
+                // Định dạng ngày theo dd-mm-yyyy
+                $followup['voucher_date'] = date('d-m-Y', strtotime($followup['voucher_date']));
+                // Định dạng số tiền gốc và số chưa thanh toán theo quy tắc Việt Nam
+                $followup['amount'] = number_format($followup['amount'], 0, ',', '.');
+                $followup['outstanding'] = number_format($outstandingAmount, 0, ',', '.');
+                // Lưu giá trị raw để tính toán trên view
+                $followup['raw_outstanding'] = $outstandingAmount;
+                $unsettledFollowups[] = $followup;
+            }
+        }
+        
+        // Lấy ngày hiện tại cho trường thanh toán (định dạng YYYY-MM-DD vì là input date)
+        $currentDate = date('Y-m-d');
+        $this->assign('current_date', $currentDate);
+        $this->assign('followups', $unsettledFollowups);
+        
         return $this->render(); // View: getPaymentSelection.php
     }
+    
 
     // 9.3.2 - POST: Lập phiếu thanh toán công nợ theo phiếu theo dõi (sau khi chọn các phiếu theo dõi cần thanh toán)
     public function postPaymentFollowup()
@@ -257,7 +285,6 @@ class CustomsExpense extends BaseController
             'amount'           => $total,
             'description'      => 'Thanh toán công nợ theo danh sách phiếu theo dõi',
             'transaction_type' => 'chi',
-            'is_followup'      => 0,
             'created_by'       => $this->session->userId,
         ];
         $paymentVoucherId = $this->cashJournalModel->insert($paymentData);
@@ -280,9 +307,11 @@ class CustomsExpense extends BaseController
     // 9.3.3 - GET: Hiển thị form lập phiếu thanh toán công nợ không theo phiếu theo dõi
     public function getPaymentNonFollowup()
     {
-        return $this->render(); // View: getPaymentNonFollowup.php
+        // Lấy ngày hiện tại theo định dạng YYYY-MM-DD
+        $currentDate = date('Y-m-d');
+        $this->assign('current_date', $currentDate);
+        return $this->render();
     }
-
     // 9.3.3 - POST: Xử lý thanh toán công nợ không theo phiếu theo dõi (tự động theo FIFO)
     public function postPaymentNonFollowup()
     {
@@ -296,7 +325,6 @@ class CustomsExpense extends BaseController
             'amount'           => $amount,
             'description'      => $description,
             'transaction_type' => 'chi',
-            'is_followup'      => 0,
             'created_by'       => $this->session->userId,
         ];
         $paymentVoucherId = $this->cashJournalModel->insert($paymentData);
@@ -318,7 +346,7 @@ class CustomsExpense extends BaseController
             $this->debtSettlementModel->insert($settlement);
             $remaining -= $settle_amount;
         }
-        return redirect()->to('customs-expense/list-followup');
+        return redirect()->to('customs-expense/list-cash-journal');
     }
 
     /* ---------------------------- 9.4 Danh sách phiếu theo dõi ---------------------------- */
@@ -357,22 +385,48 @@ class CustomsExpense extends BaseController
     
     /* ---------------------------- 9.5 Danh sách phiếu thu/chi ---------------------------- */
 
-    // GET: Hiển thị danh sách phiếu thu/chi
+    // GET: Lấy danh sách phiếu thu/chi và hiển thị cùng cột mã phiếu theo dõi (nếu có)
     public function getListCashJournal()
     {
+        // Lấy tất cả các phiếu từ bảng custom_cash_journals
         $journals = $this->cashJournalModel->findAll();
-        // Phân chia số tiền thu và chi cho từng phiếu giao dịch
-        foreach ($journals as &$journal) {
-            if ($journal['transaction_type'] == 'thu') {
-                $journal['thu'] = $journal['amount'];
-                $journal['chi'] = '';
+
+        // Với mỗi phiếu, định dạng ngày và số theo quy tắc Việt Nam;
+        // nếu có purpose_id thì lấy voucher_number từ bảng custom_purposes.
+        foreach ($journals as $key => $journal) {
+            // Giả sử trường created_date trong custom_cash_journals là ngày lập phiếu (yyyy-mm-dd)
+            $journals[$key]['created_date'] = date('d-m-Y', strtotime($journal['created_date']));
+            // Định dạng số tiền: không có phần lẻ, phân cách phần ngàn bằng dấu chấm
+            $journals[$key]['amount'] = number_format($journal['amount'], 0, ',', '.');
+            // Nếu purpose_id có giá trị, lấy mã phiếu theo dõi (voucher_number) từ bảng custom_purposes
+            if (!empty($journal['purpose_id'])) {
+                $purpose = $this->purposeModel->find($journal['purpose_id']);
+                $journals[$key]['voucher_tracking'] = isset($purpose['voucher_number']) ? $purpose['voucher_number'] : '';
+                // Ngoài ra, nếu muốn hiển thị tên mục đích, có thể lấy thêm trường purpose_name nếu cần
+                $journals[$key]['purpose_name'] = $purpose['purpose_name'] ?? '';
             } else {
-                $journal['thu'] = '';
-                $journal['chi'] = $journal['amount'];
+                $journals[$key]['voucher_tracking'] = '';
+                $journals[$key]['purpose_name'] = '';
+            }
+            // Phân chia số tiền thu/chi theo loại giao dịch (transaction_type: 'thu' hoặc 'chi')
+            if ($journal['transaction_type'] == 'thu') {
+                $journals[$key]['thu'] = $journals[$key]['amount'];
+                $journals[$key]['chi'] = '';
+            } else {
+                $journals[$key]['thu'] = '';
+                $journals[$key]['chi'] = $journals[$key]['amount'];
             }
         }
+
         $this->assign('journals', $journals);
         return $this->render(); // View: getListCashJournal.php
+    }
+
+
+    // GET: Hiển thị trang chọn loại phiếu thu/chi
+    public function getChooseCashVoucher()
+    {
+        return $this->render(); // View: getChooseCashVoucher.php
     }
 
     /* ---------------------------- 9.5 Quản lý danh mục mục đích ---------------------------- */
