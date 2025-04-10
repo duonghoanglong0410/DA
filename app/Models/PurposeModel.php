@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\BaseModel;
+use CodeIgniter\Model;
 
 class PurposeModel extends BaseModel
 {
@@ -47,4 +48,26 @@ class PurposeModel extends BaseModel
         return $prefix . '-' . $nextFormatted;
     }
     
+    /**
+     * Lấy tổng công nợ chưa trả
+     * @return float Tổng công nợ chưa trả
+     */
+    public function getTotalRemainingAmount()
+    {
+        return $this->where('remaining_amount >', 0)
+                    ->selectSum('remaining_amount')
+                    ->first()['remaining_amount'] ?? 0;
+    }
+
+    /**
+     * Lấy công nợ chưa trả chia theo từng nhóm mục đích
+     * @return array Dữ liệu công nợ chưa trả
+     */
+    public function getDebtByPurposeGroup()
+    {
+        return $this->select('purpose_name, SUM(remaining_amount) as total_amount')
+                    ->groupBy('purpose_name')
+                    ->having('total_amount >', 0)
+                    ->findAll();
+    }
 }

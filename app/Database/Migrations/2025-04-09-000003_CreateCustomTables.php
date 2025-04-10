@@ -99,10 +99,10 @@ class CreateCustomTables extends Migration
         $this->forge->createTable('custom_cash_journals', true);
 
         // Thêm khóa ngoại cho custom_cash_journals.created_by tham chiếu đến users.id
-        $this->db->query('ALTER TABLE custom_cash_journals ADD CONSTRAINT fk_custom_cash_journals_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE');
+        // $this->db->query('ALTER TABLE custom_cash_journals ADD CONSTRAINT fk_custom_cash_journals_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE');
 
         // Thêm khóa ngoại cho custom_cash_journals.purpose_id tham chiếu đến custom_purposes.id (cho các phiếu có mục đích)
-        $this->db->query('ALTER TABLE custom_cash_journals ADD CONSTRAINT fk_custom_cash_journals_purpose_id FOREIGN KEY (purpose_id) REFERENCES custom_purposes(id) ON DELETE SET NULL ON UPDATE CASCADE');
+        // $this->db->query('ALTER TABLE custom_cash_journals ADD CONSTRAINT fk_custom_cash_journals_purpose_id FOREIGN KEY (purpose_id) REFERENCES custom_purposes(id) ON DELETE SET NULL ON UPDATE CASCADE');
 
         // Tạo bảng custom_debt_settlements (liên kết thanh toán công nợ)
         $this->forge->addField([
@@ -144,10 +144,10 @@ class CreateCustomTables extends Migration
         $this->forge->createTable('custom_debt_settlements', true);
 
         // Thêm khóa ngoại cho custom_debt_settlements.payment_voucher_id tham chiếu đến custom_cash_journals.id (giao dịch chi)
-        $this->db->query('ALTER TABLE custom_debt_settlements ADD CONSTRAINT fk_debt_settlements_payment_voucher FOREIGN KEY (payment_voucher_id) REFERENCES custom_cash_journals(id) ON DELETE CASCADE ON UPDATE CASCADE');
+        // $this->db->query('ALTER TABLE custom_debt_settlements ADD CONSTRAINT fk_debt_settlements_payment_voucher FOREIGN KEY (payment_voucher_id) REFERENCES custom_cash_journals(id) ON DELETE CASCADE ON UPDATE CASCADE');
 
         // Thêm khóa ngoại cho custom_debt_settlements.followup_voucher_id tham chiếu đến custom_cash_journals.id (giao dịch theo dõi)
-        $this->db->query('ALTER TABLE custom_debt_settlements ADD CONSTRAINT fk_debt_settlements_followup_voucher FOREIGN KEY (followup_voucher_id) REFERENCES custom_cash_journals(id) ON DELETE CASCADE ON UPDATE CASCADE');
+        // $this->db->query('ALTER TABLE custom_debt_settlements ADD CONSTRAINT fk_debt_settlements_followup_voucher FOREIGN KEY (followup_voucher_id) REFERENCES custom_cash_journals(id) ON DELETE CASCADE ON UPDATE CASCADE');
     }
 
     public function down()

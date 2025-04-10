@@ -80,11 +80,12 @@ abstract class BaseController extends Controller
         #Tự động chạy migration trong lần đầu tiên user vào hệ thống nếu có thay đổi
         if (empty($this->session->didMigration) || ENVIRONMENT === 'development')
         {
+            
             $migration = \Config\Services::migrations();
-            try {
+            // try {
                 $migration->setNamespace(null)->latest();
-            } catch (\Throwable $e) {
-            }
+            // } catch (\Throwable $e) {
+            // }
 
             $this->session->didMigration = true;
         }

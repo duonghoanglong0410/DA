@@ -6,6 +6,7 @@ use App\Models\CashJournalModel;
 use App\Models\DebtSettlementModel;
 use App\Models\PurposeModel;
 use App\Controllers\BaseController;
+use App\Models\CustomsExpenseSummaryModel;
 
 class CustomsExpense extends BaseController
 {
@@ -524,5 +525,29 @@ class CustomsExpense extends BaseController
         $this->assign('totalFund', $totalFund);
         $this->assign('totalDebt', $totalDebt);
         return $this->render(); // View: getReportOverview.php
+    }
+
+    /* ---------------------------- Tổng quan tình hình ---------------------------- */
+
+    // GET: Hiển thị tổng quan tình hình
+    public function getOverview()
+    {
+        // Lấy thông tin tồn quỹ từ customs_expense_summary
+        $customsExpenseSummaryModel = new CustomsExpenseSummaryModel();
+        $summary = $customsExpenseSummaryModel->getLatestSummary();
+        $balance = $summary['balance'];
+
+        // Lấy tổng công nợ chưa trả
+        $totalDebt = $this->purposeModel->getTotalRemainingAmount();
+
+        // Lấy công nợ chưa trả chia theo từng nhóm mục đích
+        $debtByPurpose = $this->purposeModel->getDebtByPurposeGroup();
+
+        // Gán dữ liệu vào view
+        $this->assign('balance', number_format($balance, 0, ',', '.'));
+        $this->assign('totalDebt', number_format($totalDebt, 0, ',', '.'));
+        $this->assign('debtByPurpose', $debtByPurpose);
+
+        return $this->render(); // Render view tổng quan
     }
 }

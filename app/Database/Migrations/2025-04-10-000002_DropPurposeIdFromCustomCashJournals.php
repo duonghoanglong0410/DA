@@ -8,6 +8,7 @@ class DropPurposeIdFromCustomCashJournals extends Migration
 {
     public function up()
     {
+
         // Bỏ cột purpose_id khỏi bảng custom_cash_journals
         $this->forge->dropColumn('custom_cash_journals', 'purpose_id');
     }

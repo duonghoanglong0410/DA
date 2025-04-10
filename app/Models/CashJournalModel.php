@@ -92,5 +92,71 @@ class CashJournalModel extends BaseModel
         return $total;
     }
 
+    // Override phương thức insert
+    public function insert($row = null, bool $returnID = true)
+    {
+        $this->beginTransaction(); // Bắt đầu giao dịch
 
+        $result = parent::insert($row, $returnID);
+        
+        // Cập nhật balance trong customs_expense_summary
+        if ($result) {
+            $this->updateBalance($row['transaction_type'], $row['amount']);
+        }
+
+        $this->commitTransaction(); // Kết thúc giao dịch
+
+        return $result;
+    }
+
+    // Override phương thức update
+    public function update($id = null, $row = null): bool
+    {
+        $this->beginTransaction(); // Bắt đầu giao dịch
+
+        // Lấy thông tin phiếu cũ để so sánh
+        $oldData = $this->find($id);
+        
+        // Cập nhật balance trước khi thực hiện update
+        if ($oldData) {
+            $this->updateBalance($oldData['transaction_type'], -$oldData['amount']); // Giảm balance theo số tiền cũ
+        }
+        
+        $result = parent::update($id, $row);
+        
+        // Cập nhật balance với số tiền mới
+        if ($result) {
+            $this->updateBalance($row['transaction_type'], $row['amount']);
+        }
+
+        $this->commitTransaction(); // Kết thúc giao dịch
+
+        return $result;
+    }
+
+    // Phương thức cập nhật balance
+    private function updateBalance($transactionType, $newAmount)
+    {
+        $customsExpenseSummaryModel = new CustomsExpenseSummaryModel();
+        
+        // Lấy thông tin tổng hợp mới nhất
+        $summary = $customsExpenseSummaryModel->getLatestSummary();
+        
+        // Lấy số dư hiện tại
+        $currentBalance = $summary['balance'];
+
+        // Tính toán balance mới dựa trên loại giao dịch
+        if ($transactionType === 'thu') {
+            // Nếu là phiếu thu, tăng balance
+            $newBalance = $currentBalance + $newAmount;
+        } else if ($transactionType === 'chi') {
+            // Nếu là phiếu chi, giảm balance
+            $newBalance = $currentBalance - $newAmount;
+        } else {
+            return; // Không làm gì nếu không phải thu hoặc chi
+        }
+
+        // Cập nhật lại balance
+        $customsExpenseSummaryModel->updateOrCreate($newBalance);
+    }
 }
