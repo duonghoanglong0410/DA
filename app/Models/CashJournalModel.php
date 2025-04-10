@@ -32,6 +32,23 @@ class CashJournalModel extends BaseModel
         return ($count > 0);
     }    
 
+    /**
+     * Lấy danh sách công nợ đã trả liên quan đến phiếu theo dõi (purpose_id)
+     * Đồng thời join với bảng users để lấy thông tin người tạo phiếu thanh toán.
+     *
+     * @param int $purposeId
+     * @return array
+     */
+    public function getSettlementsByPurpose($purposeId)
+    {
+        $builder = $this->db->table($this->table . ' AS ccj');
+        // Sử dụng DATE_FORMAT để định dạng ngày theo dd-mm-yyyy
+        $builder->select('ccj.*, u.fullname as creator_fullname, u.username as creator_username, DATE_FORMAT(ccj.created_date, "%d-%m-%Y") as created_date', false);
+        $builder->join('users AS u', 'ccj.created_by = u.id', 'left');
+        $builder->where('ccj.purpose_id', $purposeId);
+        return $builder->get()->getResultArray();
+    }    
+
     // Lấy danh sách phiếu theo dõi chưa được thanh toán đầy đủ
     public function getUnsettledFollowups()
     {

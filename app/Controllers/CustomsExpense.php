@@ -49,15 +49,22 @@ class CustomsExpense extends BaseController
         return $this->render();
     }
 
-    // POST: Xử lý lưu phiếu theo dõi vào custom_purposes
+    // POST: Xử lý lưu phiếu theo dõi mới (postAddFollowup)
     public function postAddFollowup()
     {
+        // Lấy ngày lập phiếu từ form input
+        $voucher_date = $this->request->getPost('voucher_date');
+
+        // Sinh tự động số phiếu (voucher_number)
+        $voucherNumber = $this->purposeModel->getNextVoucherNumber($voucher_date);
+
         $data = [
-            'voucher_date'     => $this->request->getPost('voucher_date'),
-            'purpose_name'     => $this->request->getPost('purpose_name'),
-            'amount'           => $this->request->getPost('amount'),
-            'description'      => $this->request->getPost('description'),
-            'created_by'       => $this->session->userId,
+            'voucher_date'   => $voucher_date,
+            'purpose_name'   => $this->request->getPost('purpose_name'),
+            'amount'         => $this->request->getPost('amount'),
+            'description'    => $this->request->getPost('description'),
+            'created_by'     => $this->session->userId,
+            'voucher_number' => $voucherNumber,
         ];
         $this->purposeModel->insert($data);
         return redirect()->to('customs-expense/list-followup');
@@ -152,6 +159,50 @@ class CustomsExpense extends BaseController
         $this->purposeModel->delete($id);
         session()->setFlashdata('success', 'Xoá phiếu thành công.');
         return redirect()->to('customs-expense/list-followup');
+    }
+
+    // GET: Xem chi tiết phiếu theo dõi
+    public function getDetailFollowup($id)
+    {
+        // Lấy dữ liệu phiếu theo dõi từ bảng custom_purposes
+        $followup = $this->purposeModel->find($id);
+        if (!$followup) {
+            session()->setFlashdata('error', 'Không tìm thấy phiếu theo dõi.');
+            return redirect()->to('customs-expense/list-followup');
+        }
+
+        // Lấy thông tin người lập phiếu từ UserModel
+        $voucherCreator = $this->userModel->find($followup['created_by']);
+        
+        // Lấy danh sách settlement từ custom_cash_journals liên quan đến phiếu theo dõi
+        $settlements = $this->cashJournalModel->getSettlementsByPurpose($id);
+        
+        // Định dạng lại các giá trị theo quy tắc Việt Nam
+        $voucher_number = $followup['voucher_number'];
+        $voucher_date   = date('d-m-Y', strtotime($followup['voucher_date']));
+        $purpose_name   = $followup['purpose_name'];
+        $amount         = number_format($followup['amount'], 0, ',', '.');
+        $description    = $followup['description'];
+
+        // Assign từng biến riêng biệt cho view
+        $this->assign('voucher_number', $voucher_number);
+        $this->assign('voucher_date', $voucher_date);
+        $this->assign('purpose_name', $purpose_name);
+        $this->assign('amount', $amount);
+        $this->assign('description', $description);
+
+        // Assign thông tin người tạo phiếu từ UserModel
+        $this->assign('creator_fullname', $voucherCreator['fullname'] ?? '');
+        $this->assign('creator_username', $voucherCreator['username'] ?? '');
+
+        // Định dạng ngày và số tiền cho các settlement trước khi assign
+        foreach ($settlements as $key => $settlement) {
+            $settlements[$key]['created_date'] = date('d-m-Y', strtotime($settlement['created_date']));
+            $settlements[$key]['amount'] = number_format($settlement['amount'], 0, ',', '.');
+        }
+        $this->assign('settlements', $settlements);
+
+        return $this->render(); // Render view: getDetailFollowup.php
     }
 
     /* ---------------------------- 9.2 Lập phiếu thu tiền ---------------------------- */
@@ -277,15 +328,13 @@ class CustomsExpense extends BaseController
     {
         // Lấy toàn bộ phiếu theo dõi từ bảng custom_purposes
         $followups = $this->purposeModel->findAll();
-    
-        // Với mỗi phiếu theo dõi, định dạng lại ngày và số tiền theo quy tắc Việt Nam,
-        // đồng thời xử lý block can_delete theo quy tắc đã ghi nhớ.
+
+        // Định dạng ngày và số theo quy tắc Việt Nam trước khi assign ra view.
         foreach ($followups as $key => $followup) {
             // Định dạng ngày: chuyển từ yyyy-mm-dd sang dd-mm-yyyy
             $formattedDate = date('d-m-Y', strtotime($followup['voucher_date']));
-            // Định dạng số: không có phần lẻ, phân cách ngàn bằng dấu chấm
+            // Định dạng số tiền: không có phần lẻ, phân cách ngàn bằng dấu chấm
             $formattedAmount = number_format($followup['amount'], 0, ',', '.');
-    
             $followups[$key]['voucher_date'] = $formattedDate;
             $followups[$key]['amount']       = $formattedAmount;
     
@@ -301,12 +350,11 @@ class CustomsExpense extends BaseController
     
         // Assign biến followups (với các trường đã được định dạng) ra view
         $this->assign('followups', $followups);
-        return $this->render(); // Render view: getListFollowup.php
+        return $this->render(); // View: getListFollowup.php
     }
     
     
     
-
     /* ---------------------------- 9.5 Danh sách phiếu thu/chi ---------------------------- */
 
     // GET: Hiển thị danh sách phiếu thu/chi
