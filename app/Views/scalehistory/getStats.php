@@ -97,9 +97,21 @@
             <tbody>
                 {statsData}
                 <tr>
-                    <td>{yard_code}</td>
-                    <td>{yard_name}</td>
-                    <td>{Loaihang}</td>
+                    <!-- Hiển thị thông tin bãi (chỉ với hàng đầu tiên của bãi) -->
+                    {can_display_yard}
+                    {yard_info}
+                    <td rowspan="{rowspan}">{yard_code}</td>
+                    <td rowspan="{rowspan}">{yard_name}</td>
+                    {/yard_info}
+                    {/can_display_yard}
+                    
+                    <!-- Hiển thị thông tin loại hàng (chỉ với hàng đầu tiên của loại hàng) -->
+                    {can_display_loaihang}
+                    {loaihang_info}
+                    <td rowspan="{rowspan}">{Loaihang}</td>
+                    {/loaihang_info}
+                    {/can_display_loaihang}
+                    
                     <td>{Msp}</td>
                     <td class="text-center">{total_records}</td>
                     <td class="text-end">{total_KLkhongtai_formatted}</td>

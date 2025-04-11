@@ -128,7 +128,7 @@ class ScaleHistory extends BaseController
 
         // Xây dựng mảng $where cho Model dựa trên filterParams
         $where = $this->buildWhereConditions($filterParams);
-        
+
         // Lấy dữ liệu thống kê
         $statsData = $this->canTuDongModel->getStatsByYardAndType($where, $searchTerm);
         
@@ -140,11 +140,14 @@ class ScaleHistory extends BaseController
             }
         }
         
+        // Xử lý rowspan cho bãi và loại hàng
+        $processedData = $this->processStatsForRowspan($statsData);
+        
         // Chuẩn bị dữ liệu cho form lọc
         $this->prepareFilterData($filterParams);
         
         // Gán dữ liệu ra view
-        $this->assign('statsData', $statsData);
+        $this->assign('statsData', $processedData);
         
         // Gán từng tham số lọc riêng lẻ
         $this->assign('filter_yard_id', $filterParams['yard_id']);
@@ -264,5 +267,112 @@ class ScaleHistory extends BaseController
         $this->assign('cheDoOptions', $cheDoOptions); // Danh sách tùy chọn chế độ cân
         $this->assign('loaiHangOptions', $loaiHangOptions); // Danh sách loại hàng
         $this->assign('phieuTypeOptions', $phieuTypeOptions); // Danh sách loại phiếu
+    }
+    
+    /**
+     * Xử lý dữ liệu thống kê để tạo rowspan cho các ô cần merge
+     * 
+     * @param array $statsData Dữ liệu thống kê gốc
+     * @return array Dữ liệu đã xử lý với các thuộc tính rowspan
+     */
+    private function processStatsForRowspan($statsData)
+    {
+        if (empty($statsData)) {
+            return [];
+        }
+        
+        // Tạo mảng để đếm số lượng dòng cho mỗi bãi và loại hàng
+        $yardCount = [];
+        $loaiHangCount = [];
+        
+        // Đếm số lượng dòng cho mỗi bãi và loại hàng
+        foreach ($statsData as $row) {
+            $yardKey = $row['yard_code'] . '-' . $row['yard_name'];
+            if (!isset($yardCount[$yardKey])) {
+                $yardCount[$yardKey] = 0;
+            }
+            $yardCount[$yardKey]++;
+            
+            // Đếm số lượng dòng cho mỗi loại hàng trong một bãi
+            $loaiHangKey = $yardKey . '-' . $row['Loaihang'];
+            if (!isset($loaiHangCount[$loaiHangKey])) {
+                $loaiHangCount[$loaiHangKey] = 0;
+            }
+            $loaiHangCount[$loaiHangKey]++;
+        }
+        
+        // Tạo cấu trúc dữ liệu mới
+        $processedData = [];
+        $currentYardKey = null;
+        $currentLoaiHangKey = null;
+        
+        foreach ($statsData as $index => $row) {
+            $yardKey = $row['yard_code'] . '-' . $row['yard_name'];
+            $loaiHangKey = $yardKey . '-' . $row['Loaihang'];
+            
+            // Bản ghi cơ bản
+            $newRow = [
+                'Msp' => $row['Msp'],
+                'total_records' => $row['total_records'],
+                'total_KLkhongtai' => $row['total_KLkhongtai'],
+                'total_KLcotai' => $row['total_KLcotai'],
+                'total_KLhang' => $row['total_KLhang'],
+                'total_Thanhtien' => $row['total_Thanhtien'],
+                'total_KLkhongtai_formatted' => $row['total_KLkhongtai_formatted'],
+                'total_KLcotai_formatted' => $row['total_KLcotai_formatted'],
+                'total_KLhang_formatted' => $row['total_KLhang_formatted'],
+                'total_Thanhtien_formatted' => $row['total_Thanhtien_formatted'],
+            ];
+            
+            // Tạo biến array thể hiện điều kiện hiển thị
+            $canDisplayYard = [];  
+            $canDisplayLoaihang = [];  
+
+            // Hàng đầu tiên của bãi
+            if ($currentYardKey !== $yardKey) {
+                $canDisplayYard = [[]]; // Hiển thị
+                $currentYardKey = $yardKey;
+                $currentLoaiHangKey = null; // Reset khi chuyển bãi
+            }
+            
+            // Hàng đầu tiên của loại hàng trong bãi
+            if ($currentLoaiHangKey !== $loaiHangKey) {
+                $canDisplayLoaihang = [[]]; // Hiển thị
+                $currentLoaiHangKey = $loaiHangKey;
+            }
+            
+            // Bổ sung dữ liệu bãi
+            if (!empty($canDisplayYard)) {
+                $newRow['can_display_yard'] = $canDisplayYard;
+                $newRow['yard_info'] = [
+                    [
+                        'yard_code' => $row['yard_code'],
+                        'yard_name' => $row['yard_name'],
+                        'rowspan' => $yardCount[$yardKey]
+                    ]
+                ];
+            } else {
+                $newRow['can_display_yard'] = [];
+                $newRow['yard_info'] = [];
+            }
+            
+            // Bổ sung dữ liệu loại hàng
+            if (!empty($canDisplayLoaihang)) {
+                $newRow['can_display_loaihang'] = $canDisplayLoaihang;
+                $newRow['loaihang_info'] = [
+                    [
+                        'Loaihang' => $row['Loaihang'],
+                        'rowspan' => $loaiHangCount[$loaiHangKey]
+                    ]
+                ];
+            } else {
+                $newRow['can_display_loaihang'] = [];
+                $newRow['loaihang_info'] = [];
+            }
+            
+            $processedData[] = $newRow;
+        }
+        
+        return $processedData;
     }
 }
