@@ -35,19 +35,19 @@ class CanTuDongModel extends BaseModel
         $searchTermToUse = $searchTerm !== null ? $searchTerm : $this->searchTerm;
         
         // Thêm join với bảng purchase_yards
-        $builder->join('purchase_yards', 'purchase_yards.id = can_tu_dong.purchase_yard_id', 'left');
-        
+        $this->join('purchase_yards', 'purchase_yards.id = can_tu_dong.purchase_yard_id', 'left');
         // Áp dụng điều kiện tìm kiếm LIKE
         if (!empty($searchTermToUse)) {
-            $builder->groupStart()
+            $this->groupStart()
                    ->like('can_tu_dong.Soxe', $searchTermToUse, 'both')
                    ->orLike('can_tu_dong.Ghichu', $searchTermToUse, 'both')
                    ->orLike('can_tu_dong.Tenlaixe', $searchTermToUse, 'both')
+                   ->orLike('can_tu_dong.Tenkhachhang', $searchTermToUse, 'both')
                    ->groupEnd();
         }
         
         // Gọi phương thức _applyWhereConditions của lớp cha
-        return parent::_applyWhereConditions($builder, $where);
+        return parent::_applyWhereConditions($this, $where);
     }
 
     /**
@@ -97,6 +97,40 @@ class CanTuDongModel extends BaseModel
         
         // Sử dụng phương thức của BaseModel để xử lý phần còn lại
         return parent::customPaginateCountAll($where);
+    }
+    
+    /**
+     * Thống kê tổng KL không tải, có tải, KL hàng, tổng thành tiền nhóm theo bãi và loại hàng
+     *
+     * @param array  $where       Điều kiện lọc cơ bản
+     * @param string $searchTerm  Từ khóa tìm kiếm
+     * @return array             Kết quả thống kê
+     */
+    public function getStatsByYardAndType($where = [], $searchTerm = '')
+    {
+        $this->select('
+                purchase_yards.yard_code,
+                purchase_yards.yard_name,
+                can_tu_dong.Loaihang,
+                SUBSTRING(can_tu_dong.Msp, 1, 2) as Msp,
+                COUNT(*) as total_records,
+                SUM(can_tu_dong.KLkhongtai) as total_KLkhongtai,
+                SUM(can_tu_dong.KLcotai) as total_KLcotai,
+                SUM(can_tu_dong.KLhang) as total_KLhang,
+                SUM(can_tu_dong.Thanhtien) as total_Thanhtien
+            ');
+        
+        // Áp dụng điều kiện where và searchTerm
+        $this->_applyWhereConditions($this, $where, $searchTerm);
+        
+        // Nhóm kết quả theo bãi và loại hàng và loại phiếu
+        $this->groupBy('purchase_yards.yard_code, purchase_yards.yard_name, can_tu_dong.Loaihang, SUBSTRING(can_tu_dong.Msp, 1, 2)');
+        
+        // Sắp xếp kết quả
+        $this->orderBy('purchase_yards.yard_name ASC, can_tu_dong.Loaihang ASC, Msp ASC');
+        
+        // Thực hiện truy vấn và trả về kết quả
+        return $this->get()->getResultArray();
     }
     
     /**

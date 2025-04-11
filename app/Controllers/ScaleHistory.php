@@ -41,28 +41,12 @@ class ScaleHistory extends BaseController
             'end_date'   => $this->request->getGet('end_date'),
             'chedo'      => $this->request->getGet('chedo'),
             'loaihang'   => $this->request->getGet('loaihang'),
+            'phieu_type' => $this->request->getGet('phieu_type'),
         ];
         $searchTerm = $this->request->getGet('search_term') ?? '';
 
         // Xây dựng mảng $where cho Model dựa trên filterParams
-        $where = [];
-        if (!empty($filterParams['yard_id'])) {
-            $where['can_tu_dong.purchase_yard_id'] = $filterParams['yard_id']; // Thêm tiền tố bảng
-        }
-        if (!empty($filterParams['start_date'])) {
-            $where['can_tu_dong.Ngaycan >='] = $filterParams['start_date']; // Lớn hơn hoặc bằng
-        }
-        if (!empty($filterParams['end_date'])) {
-            $where['can_tu_dong.Ngaycan <='] = $filterParams['end_date'];   // Nhỏ hơn hoặc bằng
-        }
-        if (!empty($filterParams['chedo'])) {
-            $where['can_tu_dong.chedo'] = $filterParams['chedo'];
-        }
-        if (!empty($filterParams['loaihang'])) {
-            // Sử dụng ILIKE hoặc LOWER() để tìm kiếm không phân biệt hoa thường
-            $where['LOWER(can_tu_dong.Loaihang)'] = ['op' => 'like', 'val' => '%' . strtolower($filterParams['loaihang']) . '%'];
-        }
-
+        $where = $this->buildWhereConditions($filterParams);
 
         // Phân trang
         $totalRecords = $this->canTuDongModel->countScaleHistory($where, $searchTerm);
@@ -98,8 +82,127 @@ class ScaleHistory extends BaseController
             }
         }
 
+        // Chuẩn bị dữ liệu cho form lọc
+        $this->prepareFilterData($filterParams);
 
-        // Lấy danh sách bãi để lọc
+        // Gán dữ liệu ra view
+        $this->assign('scaleHistory', $scaleHistory);
+        
+        // Gán từng tham số lọc riêng lẻ thay vì gán cả mảng filterParams
+        $this->assign('filter_yard_id', $filterParams['yard_id']);
+        $this->assign('filter_start_date', $filterParams['start_date']);
+        $this->assign('filter_end_date', $filterParams['end_date']);
+        $this->assign('filter_chedo', $filterParams['chedo']);
+        $this->assign('filter_loaihang', $filterParams['loaihang']);
+        $this->assign('filter_phieu_type', $filterParams['phieu_type']);
+        
+        $this->assign('searchTerm', $searchTerm);     // Giá trị tìm kiếm hiện tại
+        // Pagination đã được gán tự động bởi handlePagination thông qua $this->assign('pagination', ...)
+
+        // Gán biến array cho thông báo "không có dữ liệu" thay vì dùng {if} trong view
+        if (empty($scaleHistory)) {
+            $this->assign('noDataMessage', [['message' => 'Không tìm thấy dữ liệu phù hợp.']]);
+        } else {
+            $this->assign('noDataMessage', []); // Gán mảng rỗng nếu có dữ liệu
+        }
+
+        // Render view (tên file view phải là index.php theo quy tắc)
+        return $this->render();
+    }
+    
+    /**
+     * Hiển thị thống kê dữ liệu cân theo bãi và loại hàng
+     */
+    public function getStats()
+    {
+        // Lấy tham số lọc và tìm kiếm từ URL (GET request), giống như phương thức getIndex
+        $filterParams = [
+            'yard_id'    => $this->request->getGet('yard_id'),
+            'start_date' => $this->request->getGet('start_date'),
+            'end_date'   => $this->request->getGet('end_date'),
+            'chedo'      => $this->request->getGet('chedo'),
+            'loaihang'   => $this->request->getGet('loaihang'),
+            'phieu_type' => $this->request->getGet('phieu_type'),
+        ];
+        $searchTerm = $this->request->getGet('search_term') ?? '';
+
+        // Xây dựng mảng $where cho Model dựa trên filterParams
+        $where = $this->buildWhereConditions($filterParams);
+        
+        // Lấy dữ liệu thống kê
+        $statsData = $this->canTuDongModel->getStatsByYardAndType($where, $searchTerm);
+        
+        // Định dạng số liệu
+        foreach ($statsData as $key => $stat) {
+            $numericFields = ['total_KLkhongtai', 'total_KLcotai', 'total_KLhang', 'total_Thanhtien'];
+            foreach ($numericFields as $field) {
+                $statsData[$key][$field . '_formatted'] = number_format((float)$stat[$field], 0, ',', '.');
+            }
+        }
+        
+        // Chuẩn bị dữ liệu cho form lọc
+        $this->prepareFilterData($filterParams);
+        
+        // Gán dữ liệu ra view
+        $this->assign('statsData', $statsData);
+        
+        // Gán từng tham số lọc riêng lẻ
+        $this->assign('filter_yard_id', $filterParams['yard_id']);
+        $this->assign('filter_start_date', $filterParams['start_date']);
+        $this->assign('filter_end_date', $filterParams['end_date']);
+        $this->assign('filter_chedo', $filterParams['chedo']);
+        $this->assign('filter_loaihang', $filterParams['loaihang']);
+        $this->assign('filter_phieu_type', $filterParams['phieu_type']);
+        
+        $this->assign('searchTerm', $searchTerm);
+        
+        // Gán biến array cho thông báo "không có dữ liệu" thay vì dùng {if} trong view
+        if (empty($statsData)) {
+            $this->assign('noDataMessage', [['message' => 'Không tìm thấy dữ liệu phù hợp cho thống kê.']]);
+        } else {
+            $this->assign('noDataMessage', []); // Gán mảng rỗng nếu có dữ liệu
+        }
+        
+        // Render view
+        return $this->render();
+    }
+    
+    /**
+     * Hàm helper để xây dựng điều kiện where từ filter params
+     */
+    private function buildWhereConditions($filterParams)
+    {
+        $where = [];
+        if (!empty($filterParams['yard_id'])) {
+            $where['can_tu_dong.purchase_yard_id'] = $filterParams['yard_id']; // Thêm tiền tố bảng
+        }
+        if (!empty($filterParams['start_date'])) {
+            $where['can_tu_dong.Ngaycan >='] = $filterParams['start_date']; // Lớn hơn hoặc bằng
+        }
+        if (!empty($filterParams['end_date'])) {
+            $where['can_tu_dong.Ngaycan <='] = $filterParams['end_date'];   // Nhỏ hơn hoặc bằng
+        }
+        if (!empty($filterParams['chedo'])) {
+            $where['can_tu_dong.chedo'] = $filterParams['chedo'];
+        }
+        if (!empty($filterParams['loaihang'])) {
+            // Sử dụng ILIKE hoặc LOWER() để tìm kiếm không phân biệt hoa thường
+            $where['LOWER(can_tu_dong.Loaihang)'] = ['op' => 'like', 'val' => '%' . strtolower($filterParams['loaihang']) . '%'];
+        }
+        if (!empty($filterParams['phieu_type'])) {
+            // Lọc theo loại phiếu (Msp), ví dụ: NK123456, CT123456, XK123456
+            $where['can_tu_dong.Msp'] = ['op' => 'like', 'val' => $filterParams['phieu_type'] . '%'];
+        }
+        
+        return $where;
+    }
+    
+    /**
+     * Hàm helper để chuẩn bị dữ liệu cho form lọc
+     */
+    private function prepareFilterData($filterParams)
+    {
+        // Lấy danh sách bãi
         $yardsData = $this->purchaseYardModel->orderBy('yard_name', 'ASC')->findAll();
         
         // Xử lý dữ liệu yards để thêm thuộc tính selected
@@ -125,6 +228,14 @@ class ScaleHistory extends BaseController
             ['value' => 'Bằng tay/Manual', 'name' => 'Bằng tay', 'selected' => ($filterParams['chedo'] === 'Bằng tay/Manual') ? 'selected' : '']
         ];
         
+        // Tạo danh sách loại phiếu
+        $phieuTypeOptions = [
+            ['value' => '', 'name' => '-- Tất cả loại phiếu --', 'selected' => ($filterParams['phieu_type'] === '') ? 'selected' : ''],
+            ['value' => 'NK', 'name' => 'NK - Nhập kho', 'selected' => ($filterParams['phieu_type'] === 'NK') ? 'selected' : ''],
+            ['value' => 'CT', 'name' => 'CT - Chuyển tiếp', 'selected' => ($filterParams['phieu_type'] === 'CT') ? 'selected' : ''],
+            ['value' => 'XK', 'name' => 'XK - Xuất kho', 'selected' => ($filterParams['phieu_type'] === 'XK') ? 'selected' : '']
+        ];
+        
         // Lấy danh sách loại hàng từ bảng product_categories
         $categoriesData = $this->productCategoryModel->orderBy('name', 'ASC')->findAll();
         
@@ -147,31 +258,11 @@ class ScaleHistory extends BaseController
                 'selected' => $selected
             ];
         }
-
+        
         // Gán dữ liệu ra view
-        $this->assign('scaleHistory', $scaleHistory);
         $this->assign('yards', $yards);               // Danh sách bãi cho bộ lọc đã xử lý selected
         $this->assign('cheDoOptions', $cheDoOptions); // Danh sách tùy chọn chế độ cân
         $this->assign('loaiHangOptions', $loaiHangOptions); // Danh sách loại hàng
-        
-        // Gán từng tham số lọc riêng lẻ thay vì gán cả mảng filterParams
-        $this->assign('filter_yard_id', $filterParams['yard_id']);
-        $this->assign('filter_start_date', $filterParams['start_date']);
-        $this->assign('filter_end_date', $filterParams['end_date']);
-        $this->assign('filter_chedo', $filterParams['chedo']);
-        $this->assign('filter_loaihang', $filterParams['loaihang']);
-        
-        $this->assign('searchTerm', $searchTerm);     // Giá trị tìm kiếm hiện tại
-        // Pagination đã được gán tự động bởi handlePagination thông qua $this->assign('pagination', ...)
-
-        // Gán biến array cho thông báo "không có dữ liệu" thay vì dùng {if} trong view
-        if (empty($scaleHistory)) {
-            $this->assign('noDataMessage', [['message' => 'Không tìm thấy dữ liệu phù hợp.']]);
-        } else {
-            $this->assign('noDataMessage', []); // Gán mảng rỗng nếu có dữ liệu
-        }
-
-        // Render view (tên file view phải là index.php theo quy tắc)
-        return $this->render();
+        $this->assign('phieuTypeOptions', $phieuTypeOptions); // Danh sách loại phiếu
     }
 }
