@@ -16,19 +16,37 @@
         </div>
     </div>
     
+    <!-- Phần chọn loại mặt hàng -->
+    <div id="product-type-selection" class="row justify-content-center mb-4" style="display: none;">
+        <div class="col-md-6 text-center">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Chọn loại mặt hàng</h5>
+                </div>
+                <div class="card-body d-flex flex-column align-items-center">
+                    {products}
+                    <button class="btn-product-type btn btn-outline-primary w-75 py-3 mb-3 fs-5" data-name="{name}" data-id="{id}">{name}</button>
+                    {/products}
+                </div>
+                <div class="card-footer">
+                    <button id="btn-back-to-options" class="btn btn-secondary">Quay lại</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Danh sách phiếu cân -->
     <div id="receipt-list-section" class="row" style="display: none;">
         <div class="col-md-12">
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Danh sách phiếu cân NK ngày {current_date}</h5>
+                    <h5 class="mb-0">Danh sách phiếu cân NK ngày {current_date} - <span id="selected-product-type">Tất cả</span></h5>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-striped table-bordered">
                             <thead>
                                 <tr>
-                                    <th width="50px">Chọn</th>
                                     <th>Biển số xe</th>
                                     <th>Loại hàng</th>
                                     <th class="text-end">KL hàng</th>
@@ -37,12 +55,8 @@
                             </thead>
                             <tbody>
                                 {today_can_data}
-                                <tr id="{row_id}" data-loaihang="{Loaihang}" data-yard-id="{purchase_yard_id}">
-                                    <td class="text-center">
-                                        <input type="checkbox" class="select-item" data-id="{id}" data-loaihang="{Loaihang}" 
-                                               data-klhang="{KLhang}" data-dongia="{Dongia}" data-soxe="{Soxe}" 
-                                               data-yard-id="{purchase_yard_id}">
-                                    </td>
+                                <tr id="{row_id}" class="selectable-row" data-loaihang="{Loaihang}" data-yard-id="{purchase_yard_id}" 
+                                    data-id="{id}" data-klhang="{KLhang}" data-dongia="{Dongia}" data-soxe="{Soxe}">
                                     <td>{Soxe}</td>
                                     <td>{Loaihang}</td>
                                     <td class="text-end">{KLhang_formatted}</td>
@@ -53,9 +67,14 @@
                                 <!-- Hiển thị thông báo nếu không có dữ liệu -->
                                 {no_data_message}
                                 <tr>
-                                    <td colspan="5" class="text-center">{message}</td>
+                                    <td colspan="4" class="text-center">{message}</td>
                                 </tr>
                                 {/no_data_message}
+                                
+                                <!-- Hiển thị khi không có phiếu cân phù hợp với loại hàng đã chọn -->
+                                <tr id="no-matching-data" style="display: none;">
+                                    <td colspan="4" class="text-center">Không có phiếu cân nào phù hợp với loại hàng đã chọn.</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -142,7 +161,10 @@
     $(document).ready(function() {
         // Biến lưu trữ thông tin loại hàng đã chọn
         let selectedProductType = '';
+        let filteredProductName = ''; // Lưu tên loại hàng đã lọc
         let receiptMode = ''; // 'byVehicle' or 'summary'
+        // Mảng lưu trữ các dòng đã chọn
+        let selectedRows = [];
         
         // Dữ liệu về loại tiền tệ của các bãi
         const yardCurrencies = {yard_currencies_json};
@@ -151,7 +173,37 @@
         $('#btn-receipt-by-vehicle').on('click', function() {
             receiptMode = 'byVehicle';
             $('#option-buttons').hide();
+            $('#product-type-selection').show();
+        });
+        
+        // Event handler cho nút quay lại từ màn hình chọn loại hàng
+        $('#btn-back-to-options').on('click', function() {
+            $('#product-type-selection').hide();
+            $('#option-buttons').show();
+        });
+        
+        // Event handler cho các nút chọn loại mặt hàng
+        $('.btn-product-type').on('click', function() {
+            const productName = $(this).data('name');
+            const productId = $(this).data('id');
+            
+            // Lưu thông tin loại hàng đã chọn
+            filteredProductName = productName;
+            
+            // Hiển thị tên loại hàng đã chọn
+            $('#selected-product-type').text(productName);
+            
+            // Ẩn màn hình chọn loại hàng
+            $('#product-type-selection').hide();
+            
+            // Hiển thị danh sách phiếu cân
             $('#receipt-list-section').show();
+            
+            // Lọc danh sách phiếu cân theo loại hàng
+            filterReceiptsByProductType(productName);
+            
+            // Chọn giá trị category_id tương ứng
+            $('#category_id').val(productId);
         });
         
         $('#btn-receipt-summary').on('click', function() {
@@ -186,13 +238,13 @@
         // Event handlers cho các nút điều hướng
         $('#btn-back').on('click', function() {
             $('#receipt-list-section').hide();
-            $('#option-buttons').show();
+            $('#product-type-selection').show();
             resetForm();
         });
         
         $('#btn-next').on('click', function() {
             // Kiểm tra nếu có phiếu được chọn
-            if ($('.select-item:checked').length === 0) {
+            if (selectedRows.length === 0) {
                 alert('Vui lòng chọn ít nhất một phiếu cân!');
                 return;
             }
@@ -246,37 +298,44 @@
             }
         }
         
-        // Xử lý khi click vào checkbox hoặc dòng trong bảng
-        $('.select-item').each(function() {
-            const $checkbox = $(this);
-            
-            $checkbox.on('change', function() {
-                handleItemSelection($(this));
-            });
-            
-            // Thêm sự kiện click cho cả dòng
-            $checkbox.closest('tr').on('click', function(e) {
-                // Chỉ xử lý nếu không click vào chính checkbox
-                if (e.target !== $checkbox.get(0)) {
-                    $checkbox.prop('checked', !$checkbox.prop('checked'));
-                    handleItemSelection($checkbox);
-                }
-            });
-        });
+        // Thêm CSS cho dòng có thể chọn và dòng được chọn
+        $('<style>')
+            .text('.selectable-row { cursor: pointer; } .selectable-row.selected { background-color: #b8e0ff !important; }')
+            .appendTo('head');
         
-        // Xử lý khi chọn/bỏ chọn một mục
-        function handleItemSelection($checkbox) {
-            const loaiHang = $checkbox.data('loaihang');
-            const klHang = parseFloat($checkbox.data('klhang')) || 0;
-            const donGia = parseFloat($checkbox.data('dongia')) || 0;
-            const soXe = $checkbox.data('soxe');
-            const yardId = $checkbox.data('yard-id');
+        // Xử lý khi click vào dòng trong bảng
+        $(document).on('click', '.selectable-row', function() {
+            // Bỏ qua nếu dòng đang bị ẩn
+            if ($(this).is(':hidden')) {
+                return;
+            }
             
-            // Nếu đang chọn một checkbox
-            if ($checkbox.prop('checked')) {
-                // Nếu chưa có loại hàng nào được chọn hoặc loại hàng trùng với loại đã chọn
+            const $row = $(this);
+            const rowId = $row.data('id');
+            const loaiHang = $row.data('loaihang');
+            const klHang = parseFloat($row.data('klhang')) || 0;
+            const donGia = parseFloat($row.data('dongia')) || 0;
+            const soXe = $row.data('soxe');
+            const yardId = $row.data('yard-id');
+            
+            // Kiểm tra nếu dòng đã được chọn
+            const isSelected = $row.hasClass('selected');
+            
+            if (!isSelected) {
+                // Thêm dòng mới
+                // Kiểm tra nếu loại hàng phù hợp
                 if (selectedProductType === '' || selectedProductType === loaiHang) {
                     selectedProductType = loaiHang;
+                    
+                    // Thêm vào mảng selectedRows
+                    selectedRows.push({
+                        id: rowId,
+                        loaiHang: loaiHang,
+                        klHang: klHang,
+                        donGia: donGia,
+                        soXe: soXe,
+                        yardId: yardId
+                    });
                     
                     // Cập nhật yardId trong dropdown
                     $('#yard_id').val(yardId);
@@ -290,57 +349,69 @@
                             return false; // break loop
                         }
                     });
+                    
+                    // Thêm lớp selected cho dòng
+                    $row.addClass('selected');
                 } else {
-                    // Nếu loại hàng không trùng khớp, bỏ chọn checkbox này
-                    $checkbox.prop('checked', false);
                     alert(`Chỉ được chọn một loại hàng. Bạn đã chọn "${selectedProductType}".`);
                     return;
                 }
             } else {
-                // Nếu bỏ chọn tất cả, reset selectedProductType
-                if ($('.select-item:checked').length === 0) {
+                // Bỏ chọn dòng
+                // Xóa khỏi mảng selectedRows
+                selectedRows = selectedRows.filter(item => item.id !== rowId);
+                
+                // Xóa lớp selected
+                $row.removeClass('selected');
+                
+                // Nếu không còn dòng nào được chọn, reset selectedProductType
+                if (selectedRows.length === 0) {
                     selectedProductType = '';
                 }
             }
             
-            // Khóa/mở các checkbox khác loại
-            $('.select-item').each(function() {
-                const itemLoaiHang = $(this).data('loaihang');
-                // Kiểm tra nếu đã chọn loại hàng khác
-                if (selectedProductType !== '' && itemLoaiHang !== selectedProductType) {
-                    $(this).prop('disabled', true);
-                    $(this).closest('tr').addClass('text-muted');
-                } else {
-                    $(this).prop('disabled', false);
-                    $(this).closest('tr').removeClass('text-muted');
-                }
-            });
+            // Cập nhật trạng thái các dòng khác loại
+            updateRowSelectionState();
             
             // Cập nhật thông tin form
             updateFormInfo();
+        });
+        
+        // Hàm cập nhật trạng thái khả dụng của các dòng
+        function updateRowSelectionState() {
+            $('.selectable-row').each(function() {
+                // Bỏ qua nếu dòng đang bị ẩn do lọc
+                if ($(this).is(':hidden')) {
+                    return;
+                }
+                
+                const $row = $(this);
+                const loaiHang = $row.data('loaihang');
+                
+                // Thêm/xóa lớp mờ cho các dòng khác loại
+                if (selectedProductType !== '' && loaiHang !== selectedProductType) {
+                    $row.addClass('text-muted');
+                } else {
+                    $row.removeClass('text-muted');
+                }
+            });
         }
         
         // Cập nhật thông tin form dựa trên các mục đã chọn
         function updateFormInfo() {
-            const selectedIds = [];
+            const selectedIds = selectedRows.map(item => item.id);
             let totalWeight = 0;
             let totalValue = 0;
             let vehicleNumber = '';
             
-            $('.select-item:checked').each(function() {
-                const id = $(this).data('id');
-                const weight = parseFloat($(this).data('klhang')) || 0;
-                const price = parseFloat($(this).data('dongia')) || 0;
-                const soXe = $(this).data('soxe');
-                
-                selectedIds.push(id);
-                totalWeight += weight;
-                totalValue += weight * price;
+            selectedRows.forEach(function(item) {
+                totalWeight += item.klHang;
+                totalValue += item.klHang * item.donGia;
                 
                 // Xử lý biển số xe
                 if (vehicleNumber === '') {
-                    vehicleNumber = soXe;
-                } else if (vehicleNumber !== soXe && vehicleNumber !== 'Tổng hợp') {
+                    vehicleNumber = item.soXe;
+                } else if (vehicleNumber !== item.soXe && vehicleNumber !== 'Tổng hợp') {
                     vehicleNumber = 'Tổng hợp';
                 }
             });
@@ -365,12 +436,11 @@
         
         // Reset form và các lựa chọn
         function resetForm() {
-            // Bỏ chọn tất cả các checkbox
-            $('.select-item').each(function() {
-                $(this).prop('checked', false);
-                $(this).prop('disabled', false);
-                $(this).closest('tr').removeClass('text-muted');
-            });
+            // Bỏ chọn tất cả các dòng
+            $('.selectable-row').removeClass('selected text-muted');
+            
+            // Reset mảng selectedRows
+            selectedRows = [];
             
             // Reset selectedProductType
             selectedProductType = '';
@@ -448,6 +518,31 @@
             // Chọn tiền tệ đầu tiên nếu có
             if ($('#currency_id option').length > 0) {
                 $('#currency_id').val($('#currency_id option:first').val());
+            }
+        }
+        
+        // Hàm lọc danh sách phiếu cân theo loại hàng
+        function filterReceiptsByProductType(productName) {
+            let hasMatchingReceipts = false;
+            
+            $('.selectable-row').each(function() {
+                const $row = $(this);
+                const loaiHang = $row.data('loaihang');
+                
+                // So sánh không phân biệt hoa thường
+                if (loaiHang.toLowerCase() === productName.toLowerCase()) {
+                    $row.show();
+                    hasMatchingReceipts = true;
+                } else {
+                    $row.hide();
+                }
+            });
+            
+            // Hiển thị thông báo nếu không có phiếu cân phù hợp
+            if (!hasMatchingReceipts) {
+                $('#no-matching-data').show();
+            } else {
+                $('#no-matching-data').hide();
             }
         }
         
