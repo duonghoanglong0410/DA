@@ -7,10 +7,6 @@ use App\Models\BaseModel; // Kế thừa BaseModel
 class CanTuDongModel extends BaseModel
 {
     protected $table            = 'can_tu_dong'; // Tên bảng
-    protected $primaryKey       = 'id';          // Khóa chính
-    protected $useAutoIncrement = true;
-    protected $returnType       = 'array';
-    protected $useSoftDeletes   = false;
     
     // Biến để lưu trữ từ khóa tìm kiếm
     protected $searchTerm = '';
