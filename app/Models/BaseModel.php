@@ -37,12 +37,60 @@ abstract class BaseModel extends Model
         // shuffle(self::$chartColorCode);
     }
 
-    public function customPaginate($perPage, $page)
+    /**
+     * Phân trang dữ liệu với tùy chọn sắp xếp và điều kiện where.
+     *
+     * @param int   $perPage  Số lượng bản ghi trên mỗi trang.
+     * @param int   $page     Số trang hiện tại.
+     * @param string $orderBy  Tên cột dùng để sắp xếp. Nếu rỗng sẽ mặc định sắp theo cột `created_at` theo thứ tự DESC.
+     * @param array $where    Mảng điều kiện với cấu trúc:
+     *                        [
+     *                          "column_name1" => "search value1", // so sánh bằng
+     *                          "column_name2" => [
+     *                              "op"  => "=",      // hoặc các toán tử >, <, >=, <=, hoặc 'like'
+     *                              "val" => "search value2",
+     *                          ],
+     *                          ...
+     *                        ]
+     *
+     * @return mixed Kết quả của truy vấn sau khi áp dụng phân trang, sắp xếp và lọc.
+     */
+    public function customPaginate($perPage, $page, $orderBy = '', $where = [])
     {
         $offset = ($page - 1) * $perPage;
-        return $this->orderBy('created_at', 'DESC')
-                   ->findAll($perPage, $offset);
+        
+        // Xử lý sắp xếp: nếu $orderBy rỗng thì sắp theo created_at, ngược lại sắp theo cột được chỉ định
+        if (empty($orderBy)) {
+            $this->orderBy('created_at', 'DESC');
+        } else {
+            $this->orderBy($orderBy, 'DESC');
+        }
+    
+        // Xử lý điều kiện where nếu có
+        if (!empty($where) && is_array($where)) {
+            foreach ($where as $column => $condition) {
+                // Nếu giá trị điều kiện là mảng thì dùng operator và giá trị được truyền
+                if (is_array($condition)) {
+                    $operator = isset($condition['op']) && !empty($condition['op']) ? $condition['op'] : '=';
+                    $value = $condition['val'];
+    
+                    // Nếu operator là like, sử dụng lệnh like
+                    if (strtolower($operator) === 'like') {
+                        $this->like($column, $value, 'both');
+                    } else {
+                        // Với các toán tử khác (>, <, >=, <=, =)
+                        $this->where("$column $operator", $value);
+                    }
+                } else {
+                    // Nếu giá trị chỉ là chuỗi: mặc định so sánh =
+                    $this->where($column, $condition);
+                }
+            }
+        }
+    
+        return $this->findAll($perPage, $offset);
     }
+    
         
     protected function getNextChartColorCode()
     {
