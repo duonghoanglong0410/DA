@@ -17,18 +17,8 @@
                         </select>
                     </div>
 
-                    <!-- Lọc theo Ngày Cân -->
-                    <div class="col-md-3">
-                        <label for="start_date" class="form-label">Từ ngày</label>
-                        <input type="date" id="start_date" name="start_date" class="form-control" value="{filter_start_date}">
-                    </div>
-                    <div class="col-md-3">
-                        <label for="end_date" class="form-label">Đến ngày</label>
-                        <input type="date" id="end_date" name="end_date" class="form-control" value="{filter_end_date}">
-                    </div>
-
                      <!-- Lọc theo Chế độ -->
-                    <div class="col-md-3">
+                     <div class="col-md-3">
                          <label for="chedo" class="form-label">Chế độ cân</label>
                          <select id="chedo" name="chedo" class="form-select">
                             {cheDoOptions}
@@ -57,6 +47,16 @@
                          </select>
                      </div>
 
+                    <!-- Lọc theo Ngày Cân -->
+                    <div class="col-md-3">
+                        <label for="start_date" class="form-label">Từ ngày</label>
+                        <input type="date" id="start_date" name="start_date" class="form-control" value="{filter_start_date}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="end_date" class="form-label">Đến ngày</label>
+                        <input type="date" id="end_date" name="end_date" class="form-control" value="{filter_end_date}">
+                    </div>
+
                     <!-- Tìm kiếm -->
                     <div class="col-md-6">
                         <label for="search_term" class="form-label">Tìm kiếm (Số xe, Ghi chú, Tên lái xe, Tên khách hàng)</label>
@@ -82,7 +82,7 @@
     <div class="table-responsive"> <!-- Cho phép cuộn ngang trên màn hình nhỏ -->
         <table class="table table-striped table-bordered">
             <thead>
-                <tr>
+                <tr class="table-primary">
                     <th>Mã Bãi</th>
                     <th>Tên Bãi</th>
                     <th>Loại phiếu</th>

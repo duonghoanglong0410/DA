@@ -322,6 +322,8 @@ class ScaleHistory extends BaseController
                 'total_KLcotai_formatted' => $row['total_KLcotai_formatted'],
                 'total_KLhang_formatted' => $row['total_KLhang_formatted'],
                 'total_Thanhtien_formatted' => $row['total_Thanhtien_formatted'],
+                'is_new_yard' => [], // Mặc định không phải dòng đầu của bãi mới (mảng rỗng)
+                'is_not_new_yard' => [[]], // Mặc định là không phải dòng đầu bãi mới (mảng có phần tử)
             ];
             
             // Tạo biến array thể hiện điều kiện hiển thị
@@ -333,6 +335,8 @@ class ScaleHistory extends BaseController
                 $canDisplayYard = [[]]; // Hiển thị
                 $currentYardKey = $yardKey;
                 $currentLoaiHangKey = null; // Reset khi chuyển bãi
+                $newRow['is_new_yard'] = [[]]; // Đánh dấu là dòng đầu của bãi mới (mảng có phần tử)
+                $newRow['is_not_new_yard'] = []; // Không phải dòng thường (mảng rỗng để ẩn)
             }
             
             // Hàng đầu tiên của loại hàng trong bãi

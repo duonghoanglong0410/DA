@@ -8,6 +8,9 @@ class CanTuDongModel extends BaseModel
 {
     protected $table            = 'can_tu_dong'; // Tên bảng
     
+    // Disable timestamps since the table doesn't have created_at and updated_at columns
+    protected $useTimestamps = false;
+    
     // Biến để lưu trữ từ khóa tìm kiếm
     protected $searchTerm = '';
 
@@ -18,7 +21,7 @@ class CanTuDongModel extends BaseModel
         'Ghichu', 'phantram', 'KLtru', 'Sophieuin', 'Thanhtien', 
         'KLkhongtaiR', 'KLcotaiR', 'KLhangR', 'Tenlaixe', 'Bangchu', 
         'TNgaycan', 'Giocantruoc', 'Giocansau', 'Ngaycan', 'solanin', 
-        'lanin', 'chedo', 'purchase_yard_id' // Đã thêm cột khóa ngoại
+        'lanin', 'chedo', 'purchase_yard_id', 'is_receipted' // Đã thêm cột is_receipted
     ];
     
     /**
@@ -146,4 +149,53 @@ class CanTuDongModel extends BaseModel
     {
         return $this->customPaginateCountAll($where, $searchTerm);
     }
+
+    /**
+     * Lấy dữ liệu cân theo loại phiếu trong ngày theo danh sách bãi được phân quyền
+     *
+     * @param string $today Ngày hiện tại (format Y-m-d)
+     * @param array $yardIds Danh sách ID bãi được phân quyền
+     * @param string $receiptType Loại phiếu (NK, HK, XK, CT)
+     * @return array
+     */
+    public function getTodayReceiptDataByYardIds($today, $yardIds, $receiptType = 'NK')
+    {
+        if (empty($yardIds)) {
+            return [];
+        }
+        
+        // Chọn các cột cần thiết
+        $this->select('can_tu_dong.*, purchase_yards.yard_name, purchase_yards.yard_code');
+        
+        // Join với bảng purchase_yards để lấy thông tin bãi
+        $this->join('purchase_yards', 'purchase_yards.id = can_tu_dong.purchase_yard_id', 'left');
+        
+        // Tìm theo ngày
+        $this->where('can_tu_dong.Ngaycan', $today);
+        
+        // Tìm theo Msp với loại phiếu tương ứng
+        $this->where('can_tu_dong.Msp', $receiptType);
+        
+        // Tìm theo danh sách bãi
+        $this->whereIn('can_tu_dong.purchase_yard_id', $yardIds);
+        
+        // Chỉ lấy các phiếu cân chưa được lập phiếu nhập hàng
+        $this->where('can_tu_dong.is_receipted', 0);
+
+        $this->orderBy('can_tu_dong.Loaihang ASC');
+        
+        // Thực hiện truy vấn
+        return $this->findAll();
+    }
+    
+    /**
+     * Phương thức cũ, giữ lại để tương thích ngược
+     * @deprecated Sử dụng getTodayReceiptDataByYardIds() với tham số $receiptType = 'NK'
+     */
+    public function getTodayNKDataByYardIds($today, $yardIds)
+    {
+        return $this->getTodayReceiptDataByYardIds($today, $yardIds, 'NK');
+    }
 }
+
+

@@ -17,16 +17,6 @@
                         </select>
                     </div>
 
-                    <!-- Lọc theo Ngày Cân -->
-                    <div class="col-md-3">
-                        <label for="start_date" class="form-label">Từ ngày</label>
-                        <input type="date" id="start_date" name="start_date" class="form-control" value="{filter_start_date}">
-                    </div>
-                    <div class="col-md-3">
-                        <label for="end_date" class="form-label">Đến ngày</label>
-                        <input type="date" id="end_date" name="end_date" class="form-control" value="{filter_end_date}">
-                    </div>
-
                     <!-- Lọc theo Chế độ -->
                     <div class="col-md-3">
                         <label for="chedo" class="form-label">Chế độ cân</label>
@@ -56,10 +46,20 @@
                             {/phieuTypeOptions}
                          </select>
                      </div>
+                    <!-- Lọc theo Ngày Cân -->
+                    <div class="col-md-3">
+                        <label for="start_date" class="form-label">Từ ngày</label>
+                        <input type="date" id="start_date" name="start_date" class="form-control" value="{filter_start_date}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="end_date" class="form-label">Đến ngày</label>
+                        <input type="date" id="end_date" name="end_date" class="form-control" value="{filter_end_date}">
+                    </div>
+
 
                     <!-- Tìm kiếm -->
                     <div class="col-md-6">
-                        <label for="search_term" class="form-label">Tìm kiếm (Số xe, Ghi chú, Tên lái xe)</label>
+                        <label for="search_term" class="form-label">Tìm kiếm (Số xe, Ghi chú, Tên lái xe, Tên khách hàng)</label>
                         <input type="text" id="search_term" name="search_term" class="form-control" placeholder="Nhập từ khóa..." value="{searchTerm}">
                     </div>
 
@@ -96,7 +96,15 @@
             </thead>
             <tbody>
                 {statsData}
+                <!-- Sử dụng biến is_new_yard để thêm class đường viền đậm hơn -->
+                {is_new_yard}
+                <tr class="yard-separator">
+                {/is_new_yard}
+                
+                <!-- Nếu không phải dòng bắt đầu của bãi mới -->
+                {is_not_new_yard}
                 <tr>
+                {/is_not_new_yard}
                     <!-- Hiển thị thông tin bãi (chỉ với hàng đầu tiên của bãi) -->
                     {can_display_yard}
                     {yard_info}
@@ -128,4 +136,11 @@
             </tbody>
         </table>
     </div>
+    
+    <!-- CSS cho đường viền đậm hơn -->
+    <style>
+        .yard-separator {
+            border-top: 3px solid #343a40;
+        }
+    </style>
 </div> 

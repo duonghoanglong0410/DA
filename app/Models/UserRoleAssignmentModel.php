@@ -8,7 +8,9 @@ class UserRoleAssignmentModel extends BaseModel
 {
     protected $table = 'user_role_assignments';
     protected $primaryKey = 'id';
-    protected $allowedFields = ['user_id', 'role_id', 'purchase_yard_id', 'warehouse_id', 'created_at', 'updated_at'];
+    protected $allowedFields = [
+        'user_id', 'role_id', 'purchase_yard_id', 'cash_fund_id', 'warehouse_id', 'created_at', 'updated_at'
+    ];
 
     /**
      * Lấy danh sách phân quyền của tất cả user, bao gồm thông tin user, role và (nếu có) bãi thu mua.
@@ -92,4 +94,20 @@ class UserRoleAssignmentModel extends BaseModel
         return $builder->delete();
     }
     
+    /**
+     * Lấy danh sách bãi được phân quyền cho user
+     *
+     * @param int $userId ID của người dùng
+     * @return array
+     */
+    public function getAuthorizedYardsByUserId($userId)
+    {
+        $this->select('user_role_assignments.purchase_yard_id, purchase_yards.yard_name, purchase_yards.yard_code');
+        $this->join('purchase_yards', 'purchase_yards.id = user_role_assignments.purchase_yard_id', 'inner');
+        $this->where('user_role_assignments.user_id', $userId);
+        $this->where('user_role_assignments.purchase_yard_id IS NOT NULL');
+        $this->where('purchase_yards.status', 1); // Chỉ lấy bãi đang hoạt động
+        
+        return $this->findAll();
+    }
 }
