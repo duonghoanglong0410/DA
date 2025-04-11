@@ -252,16 +252,42 @@ abstract class BaseController extends Controller
         // Prepare pagination data
         $pagination = [];
         
-        // Add previous button
-        $pagination[] = [
-            'display' => '«',
-            'url' => '?page=' . ($page - 1) . '&per_page=' . $perPage,
-            'is_active' => false,
-            'is_disabled' => $page <= 1
-        ];
+        // Giới hạn số trang hiển thị (sử dụng hằng số từ Constants)
+        $linksPerSide = Constants::PAGINATION_LINKS_PER_SIDE;
+        $startPage = max(1, $page - $linksPerSide);
+        $endPage = min($totalPages, $page + $linksPerSide);
+        
+        if ($page > 1) {
+            // Add previous button
+            $pagination[] = [
+                'display' => '«',
+                'url' => '?page=' . ($page - 1) . '&per_page=' . $perPage,
+                    'is_active' => false,
+                    'is_disabled' => $page <= 1
+                ];
+        }
+        
+        // Thêm trang đầu tiên và ellipsis nếu cần
+        if ($startPage > 1) {
+            $pagination[] = [
+                'display' => 1,
+                'url' => '?page=1&per_page=' . $perPage,
+                'is_active' => false,
+                'is_disabled' => false
+            ];
+            
+            if ($startPage > 2) {
+                $pagination[] = [
+                    'display' => '...',
+                    'url' => '#',
+                    'is_active' => false,
+                    'is_disabled' => true
+                ];
+            }
+        }
         
         // Add page numbers
-        for ($i = 1; $i <= $totalPages; $i++) {
+        for ($i = $startPage; $i <= $endPage; $i++) {
             $pagination[] = [
                 'display' => $i,
                 'url' => '?page=' . $i . '&per_page=' . $perPage,
@@ -270,13 +296,34 @@ abstract class BaseController extends Controller
             ];
         }
         
-        // Add next button
-        $pagination[] = [
-            'display' => '»',
-            'url' => '?page=' . ($page + 1) . '&per_page=' . $perPage,
-            'is_active' => false,
-            'is_disabled' => $page >= $totalPages
-        ];
+        // Thêm ellipsis và trang cuối cùng nếu cần
+        if ($endPage < $totalPages) {
+            if ($endPage < $totalPages - 1) {
+                $pagination[] = [
+                    'display' => '...',
+                    'url' => '#',
+                    'is_active' => false,
+                    'is_disabled' => true
+                ];
+            }
+            
+            $pagination[] = [
+                'display' => $totalPages,
+                'url' => '?page=' . $totalPages . '&per_page=' . $perPage,
+                'is_active' => false,
+                'is_disabled' => false
+            ];
+        }
+        
+        if ($page < $totalPages) {
+            // Add next button
+            $pagination[] = [
+                'display' => '»',
+                'url' => '?page=' . ($page + 1) . '&per_page=' . $perPage,
+                'is_active' => false,
+                'is_disabled' => $page >= $totalPages
+            ];
+        }
 
         // Prepare per page options
         $perPageOptions = [];

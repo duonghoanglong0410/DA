@@ -41,7 +41,7 @@ class Buyer extends BaseController
     public function getIndex()
     {
         // Get total count of buyers
-        $totalBuyers = $this->buyerModel->countAll();
+        $totalBuyers = $this->buyerModel->customPaginateCountAll();
 
         // Sử dụng phương thức handlePagination từ BaseController
         $pagination = $this->handlePagination($totalBuyers);

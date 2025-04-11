@@ -90,6 +90,8 @@ use stdClass;
  */
 class Model extends BaseModel
 {
+    protected $db;
+    
     /**
      * Name of database table
      *

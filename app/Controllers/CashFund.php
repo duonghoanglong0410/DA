@@ -36,7 +36,7 @@ class CashFund extends BaseController
     public function getIndex()
     {
         // Tính tổng số quỹ tiền
-        $totalFunds = $this->cashFundsModel->countAll();
+        $totalFunds = $this->cashFundsModel->customPaginateCountAll();
 
         // Sử dụng phương thức handlePagination từ BaseController
         $pagination = $this->handlePagination($totalFunds);

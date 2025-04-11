@@ -51,6 +51,7 @@ erDiagram
       decimal(20,4) solanin
       decimal(20,4) lanin
       varchar(50) chedo
+      int purchase_yard_id FK "Khóa ngoại, tham chiếu đến bãi thu mua (purchase_yards.id)"
     }
 
     /* 4. cash_funds */
@@ -390,3 +391,5 @@ erDiagram
     
     WAREHOUSE_PRODUCT_CATEGORIES }o--|| WAREHOUSES : "warehouse_id"
     WAREHOUSE_PRODUCT_CATEGORIES }o--|| PRODUCT_CATEGORIES : "product_category_id"
+
+    CAN_TU_DONG }o--|| PURCHASE_YARDS : "purchase_yard_id" 

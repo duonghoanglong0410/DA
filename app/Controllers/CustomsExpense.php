@@ -408,7 +408,7 @@ class CustomsExpense extends BaseController
     public function getListFollowup()
     {
         // Get total count of followups
-        $totalFollowups = $this->purposeModel->countAll();
+        $totalFollowups = $this->purposeModel->customPaginateCountAll();
 
         // Sử dụng phương thức handlePagination từ BaseController
         $pagination = $this->handlePagination($totalFollowups);

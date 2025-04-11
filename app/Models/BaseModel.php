@@ -11,6 +11,7 @@ use CodeIgniter\Model;
  * Description of Users
  *
  * @author duongtc
+ * @property \CodeIgniter\Database\BaseConnection $db The database connection instance.
  */
 abstract class BaseModel extends Model
 {
@@ -38,60 +39,87 @@ abstract class BaseModel extends Model
     }
 
     /**
-     * Phân trang dữ liệu với tùy chọn sắp xếp và điều kiện where.
+     * Custom pagination method with optional ordering and filtering.
      *
-     * @param int   $perPage  Số lượng bản ghi trên mỗi trang.
-     * @param int   $page     Số trang hiện tại.
-     * @param string $orderBy  Tên cột dùng để sắp xếp. Nếu rỗng sẽ mặc định sắp theo cột `created_at` theo thứ tự DESC.
-     * @param array $where    Mảng điều kiện với cấu trúc:
-     *                        [
-     *                          "column_name1" => "search value1", // so sánh bằng
-     *                          "column_name2" => [
-     *                              "op"  => "=",      // hoặc các toán tử >, <, >=, <=, hoặc 'like'
-     *                              "val" => "search value2",
-     *                          ],
-     *                          ...
-     *                        ]
-     *
-     * @return mixed Kết quả của truy vấn sau khi áp dụng phân trang, sắp xếp và lọc.
+     * @param int    $perPage Number of items per page.
+     * @param int    $page    Current page number.
+     * @param string $orderBy Column to order by (e.g., 'name ASC', 'date DESC'). Defaults to 'created_at DESC'.
+     * @param array  $where   Array of where conditions.
+     *                       Example: [
+     *                           'column1' => 'value1', // column1 = 'value1'
+     *                           'column2' => ['op' => '>', 'val' => 10], // column2 > 10
+     *                           'column3' => ['op' => 'like', 'val' => '%search%'] // column3 LIKE '%search%'
+     *                       ]
+     * @return array Paginated results.
      */
     public function customPaginate($perPage, $page, $orderBy = '', $where = [])
     {
         $offset = ($page - 1) * $perPage;
-        
-        // Xử lý sắp xếp: nếu $orderBy rỗng thì sắp theo created_at, ngược lại sắp theo cột được chỉ định
-        if (empty($orderBy)) {
-            $this->orderBy('created_at', 'DESC');
-        } else {
-            $this->orderBy($orderBy, 'DESC');
+
+        // Apply where conditions using the helper function
+        $this->_applyWhereConditions($this, $where);
+
+        // Apply order by
+        $orderByColumn = 'created_at';
+        $orderByDirection = 'DESC';
+        if (!empty($orderBy)) {
+            $parts = explode(' ', trim($orderBy));
+            $orderByColumn = $parts[0];
+            if (isset($parts[1]) && in_array(strtoupper($parts[1]), ['ASC', 'DESC'])) {
+                $orderByDirection = strtoupper($parts[1]);
+            }
         }
-    
-        // Xử lý điều kiện where nếu có
-        if (!empty($where) && is_array($where)) {
+
+        return $this->orderBy($orderByColumn, $orderByDirection)
+                    ->findAll($perPage, $offset);
+    }
+        
+    /**
+     * Counts all results matching the given where conditions.
+     *
+     * @param array $where Array of where conditions (same structure as customPaginate).
+     * @return int Total number of matching records.
+     */
+    public function customPaginateCountAll($where = [])
+    {
+        // Apply where conditions using the helper function
+        $this->_applyWhereConditions($this, $where);
+
+        // Count the results without resetting the query builder state
+        return $this->countAllResults(false);
+    }
+
+    /**
+     * Private helper function to apply WHERE conditions to the query builder.
+     *
+     * @param array $where Array of where conditions.
+     * @return void
+     */
+    protected function _applyWhereConditions($builder, $where = [])
+    {
+        if (!empty($where)) {
             foreach ($where as $column => $condition) {
-                // Nếu giá trị điều kiện là mảng thì dùng operator và giá trị được truyền
-                if (is_array($condition)) {
-                    $operator = isset($condition['op']) && !empty($condition['op']) ? $condition['op'] : '=';
-                    $value = $condition['val'];
-    
-                    // Nếu operator là like, sử dụng lệnh like
-                    if (strtolower($operator) === 'like') {
-                        $this->like($column, $value, 'both');
+                if (is_array($condition) && isset($condition['op'], $condition['val'])) {
+                    $op = strtolower(trim($condition['op']));
+                    if ($op === 'like') {
+                        // Apply on the passed builder
+                        $builder->like($column, $condition['val'], 'both'); 
                     } else {
-                        // Với các toán tử khác (>, <, >=, <=, =)
-                        $this->where("$column $operator", $value);
+                        // Ensure operator is safe (basic validation)
+                        $allowedOps = ['=', '!=', '<>', '>', '<', '>=', '<='];
+                        if (in_array($op, $allowedOps)) {
+                            // Apply on the passed builder
+                            $builder->where($column . ' ' . $op, $condition['val']);
+                        }
                     }
                 } else {
-                    // Nếu giá trị chỉ là chuỗi: mặc định so sánh =
-                    $this->where($column, $condition);
+                    // Apply on the passed builder
+                    $builder->where($column, $condition);
                 }
             }
         }
-    
-        return $this->findAll($perPage, $offset);
     }
-    
-        
+
     protected function getNextChartColorCode()
     {
         if (count(self::$chartColorCode) > 0)
@@ -146,17 +174,34 @@ abstract class BaseModel extends Model
 
     public function beginTransaction()
     {
-        $this->db->query('START TRANSACTION');
+        // Use CodeIgniter's transaction methods
+        $this->db->transBegin();
     }
 
     public function commitTransaction()
     {
-        $this->db->query('COMMIT');
+        // Use CodeIgniter's transaction methods
+        $this->db->transCommit();
     }
 
     public function rollbackTransaction()
     {
-        $this->db->query('ROLLBACK');
+        // Use CodeIgniter's transaction methods
+        $this->db->transRollback();
+    }
+
+    /**
+     * Override countAllResults to account for soft deleted accounts.
+     *
+     * @return int|string
+     */
+    public function countAllResults(bool $reset = true, bool $test = false)    
+    {
+        $ret = parent::countAllResults($reset, $test);
+
+        $this->builder()->resetQuery();
+
+        return $ret;
     }
 
     public function genNextCode($prefix)
@@ -204,6 +249,7 @@ abstract class BaseModel extends Model
         return "{$lastCode}00001";
     }
 
+    
     public function __call($name, $arguments)
     {
         $column  = '';
@@ -225,7 +271,15 @@ abstract class BaseModel extends Model
 
         if (empty($column))
         {
-            return parent::__call($name, $arguments);
+
+            $ret = parent::__call($name, $arguments);
+
+            if ($name == 'get')
+            {
+                $this->builder()->resetQuery(); // Chủ động reset query
+            }
+
+            return $ret;
         }
 
         if (count($arguments) > 1)

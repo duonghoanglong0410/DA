@@ -690,7 +690,7 @@ abstract class BaseConnection implements ConnectionInterface
 
                 if ($exception instanceof DatabaseException) {
                     throw new DatabaseException(
-                        $exception->getMessage(),
+                        $exception->getMessage() . "<br />$query",
                         $exception->getCode(),
                         $exception,
                     );
