@@ -1,10 +1,8 @@
 <div class="container-fluid mt-3">
-    <h2 class="mb-4 text-center">Lập phiếu cân nhập hàng</h2>
-    
     <!-- Phần chọn loại phiếu -->
     <div id="option-buttons" class="row justify-content-center mb-4">
-        <div class="col-md-6 text-center">
-            <div class="card">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="form-box">
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">Chọn kiểu lập phiếu</h5>
                 </div>
@@ -18,8 +16,8 @@
     
     <!-- Phần chọn loại mặt hàng -->
     <div id="product-type-selection" class="row justify-content-center mb-4" style="display: none;">
-        <div class="col-md-6 text-center">
-            <div class="card">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="form-box">
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">Chọn loại mặt hàng</h5>
                 </div>
@@ -28,7 +26,7 @@
                     <button class="btn-product-type btn btn-outline-primary w-75 py-3 mb-3 fs-5" data-name="{name}" data-id="{id}">{name}</button>
                     {/products}
                 </div>
-                <div class="card-footer">
+                <div class="mt-3 d-flex justify-content-start">
                     <button id="btn-back-to-options" class="btn btn-secondary">Quay lại</button>
                 </div>
             </div>
@@ -36,11 +34,11 @@
     </div>
     
     <!-- Danh sách phiếu cân -->
-    <div id="receipt-list-section" class="row" style="display: none;">
-        <div class="col-md-12">
-            <div class="card mb-4">
+    <div id="receipt-list-section" class="row justify-content-center" style="display: none;">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="form-box">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Danh sách phiếu cân NK ngày {current_date} - <span id="selected-product-type">Tất cả</span></h5>
+                    <h5 class="mb-0">Phiếu cân NK ngày {current_date} - <span id="selected-product-type">Tất cả</span></h5>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -48,8 +46,8 @@
                             <thead>
                                 <tr>
                                     <th>Biển số xe</th>
-                                    <th>Loại hàng</th>
-                                    <th class="text-end">KL hàng</th>
+                                    <!-- <th>Loại hàng</th> -->
+                                    <th class="text-end">KL hàng (kg)</th>
                                     <th class="text-end">Đơn giá</th>
                                 </tr>
                             </thead>
@@ -58,7 +56,7 @@
                                 <tr id="{row_id}" class="selectable-row" data-loaihang="{Loaihang}" data-yard-id="{purchase_yard_id}" 
                                     data-id="{id}" data-klhang="{KLhang}" data-dongia="{Dongia}" data-soxe="{Soxe}">
                                     <td>{Soxe}</td>
-                                    <td>{Loaihang}</td>
+                                    <!-- <td>{Loaihang}</td> -->
                                     <td class="text-end">{KLhang_formatted}</td>
                                     <td class="text-end">{Dongia_formatted}</td>
                                 </tr>
@@ -67,23 +65,21 @@
                                 <!-- Hiển thị thông báo nếu không có dữ liệu -->
                                 {no_data_message}
                                 <tr>
-                                    <td colspan="4" class="text-center">{message}</td>
+                                    <td colspan="3" class="text-center">{message}</td>
                                 </tr>
                                 {/no_data_message}
                                 
                                 <!-- Hiển thị khi không có phiếu cân phù hợp với loại hàng đã chọn -->
                                 <tr id="no-matching-data" style="display: none;">
-                                    <td colspan="4" class="text-center">Không có phiếu cân nào phù hợp với loại hàng đã chọn.</td>
+                                    <td colspan="3" class="text-center">Không có phiếu cân nào phù hợp với loại hàng đã chọn.</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
-                <div class="card-footer">
-                    <div class="d-flex justify-content-between">
-                        <button id="btn-back" class="btn btn-secondary">Quay lại</button>
-                        <button id="btn-next" class="btn btn-primary">Tiếp theo</button>
-                    </div>
+                <div class="mt-3 d-flex justify-content-between">
+                    <button id="btn-back" class="btn btn-secondary">Quay lại</button>
+                    <button id="btn-next" class="btn btn-primary">Tiếp theo</button>
                 </div>
             </div>
         </div>
@@ -93,8 +89,8 @@
     <div id="receipt-form-section" style="display: none;">
         <form id="receiptForm" method="post" action="{site_url}yard-goods-receipt/save">
             <div class="row justify-content-center">
-                <div class="col-md-8 col-lg-6">
-                    <div class="card mb-3">
+                <div class="col-12 col-md-8 col-lg-6">
+                    <div class="form-box getDetail">
                         <div class="card-header bg-success text-white">
                             <h5 class="mb-0">Thông tin phiếu nhập hàng</h5>
                         </div>
@@ -133,22 +129,20 @@
                             
                             <div class="form-group mb-3">
                                 <label for="quantity" class="form-label">Khối lượng</label>
-                                <input type="number" id="quantity" name="quantity" class="form-control" step="0.01" required>
+                                <input type="number" id="quantity" name="quantity" class="form-control" step="1" required>
                             </div>
                             
                             <div class="form-group mb-3">
                                 <label for="unit_price" class="form-label">Đơn giá</label>
-                                <input type="number" id="unit_price" name="unit_price" class="form-control" step="0.01" required>
+                                <input type="number" id="unit_price" name="unit_price" class="form-control" step="1" required>
                             </div>
                             
                             <!-- Danh sách ID đã chọn -->
                             <input type="hidden" id="selected_items" name="selected_items" value="">
                         </div>
-                        <div class="card-footer">
-                            <div class="d-flex justify-content-between">
-                                <button type="button" id="btn-back-to-list" class="btn btn-secondary">Quay lại</button>
-                                <button type="submit" class="btn btn-primary">Lập phiếu nhập hàng</button>
-                            </div>
+                        <div class="mt-3 d-flex justify-content-between">
+                            <button type="button" id="btn-back-to-list" class="btn btn-secondary">Quay lại</button>
+                            <button type="submit" class="btn btn-primary">Lập phiếu nhập hàng</button>
                         </div>
                     </div>
                 </div>
@@ -419,16 +413,16 @@
             // Cập nhật giá trị hidden input
             $('#selected_items').val(selectedIds.join(','));
             
-            // Cập nhật trường khối lượng
-            $('#quantity').val(totalWeight.toFixed(2));
+            // Cập nhật trường khối lượng - làm tròn thành số nguyên
+            $('#quantity').val(Math.round(totalWeight));
             
-            // Cập nhật trường đơn giá (trung bình)
+            // Cập nhật trường đơn giá (trung bình) - làm tròn thành số nguyên
             let avgPrice = 0;
             // Tính giá trung bình nếu có trọng lượng
             if (totalWeight > 0) {
-                avgPrice = totalValue / totalWeight;
+                avgPrice = Math.round(totalValue / totalWeight);
             }
-            $('#unit_price').val(avgPrice.toFixed(2));
+            $('#unit_price').val(avgPrice);
             
             // Cập nhật trường biển số xe
             $('#vehicle_number').val(vehicleNumber);
