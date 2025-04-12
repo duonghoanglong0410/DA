@@ -69,4 +69,18 @@ class PurchaseYardProductInfoModel extends BaseModel
         
         return $this->findAll();
     }
+    
+    /**
+     * Lấy danh sách loại tiền tệ được sử dụng trong một bãi
+     *
+     * @param int $yardId ID của bãi
+     * @return array Danh sách các currency_id
+     */
+    public function getCurrenciesByYardId($yardId)
+    {
+        $this->select('DISTINCT(currency_id) as currency_id');
+        $this->where('purchase_yard_id', $yardId);
+        
+        return $this->findAll();
+    }
 } 

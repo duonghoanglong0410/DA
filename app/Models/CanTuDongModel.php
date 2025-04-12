@@ -164,6 +164,11 @@ class CanTuDongModel extends BaseModel
             return [];
         }
         
+        // Đảm bảo $yardIds là một mảng
+        if (!is_array($yardIds)) {
+            $yardIds = [$yardIds];
+        }
+        
         // Chọn các cột cần thiết
         $this->select('can_tu_dong.*, purchase_yards.yard_name, purchase_yards.yard_code');
         
@@ -195,6 +200,44 @@ class CanTuDongModel extends BaseModel
     public function getTodayNKDataByYardIds($today, $yardIds)
     {
         return $this->getTodayReceiptDataByYardIds($today, $yardIds, 'NK');
+    }
+    
+    /**
+     * Đánh dấu phiếu cân đã được lập phiếu xuất hàng
+     * 
+     * @param array $scaleIds Danh sách ID phiếu cân cần đánh dấu
+     * @return bool Kết quả cập nhật
+     */
+    public function markAsReceipted($scaleIds)
+    {
+        if (empty($scaleIds)) {
+            return false;
+        }
+        
+        // Nếu scaleIds là một chuỗi, chuyển thành mảng
+        if (is_string($scaleIds)) {
+            $scaleIds = explode(',', $scaleIds);
+        }
+        
+        // Lọc các ID hợp lệ
+        $validIds = [];
+        foreach ($scaleIds as $id) {
+            if (is_numeric($id) && $id > 0) {
+                $validIds[] = (int)$id;
+            }
+        }
+        
+        if (empty($validIds)) {
+            return false;
+        }
+        
+        // Ghi log để debug
+        log_message('debug', 'CanTuDongModel::markAsReceipted - Đánh dấu phiếu cân: ' . implode(', ', $validIds));
+        
+        // Cập nhật trạng thái is_receipted của các phiếu cân
+        $this->whereIn('id', $validIds);
+        
+        return $this->update(null, ['is_receipted' => 1]);
     }
 }
 

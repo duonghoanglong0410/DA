@@ -1,395 +1,478 @@
 erDiagram
     %% 1. buyers
     BUYERS {
-      int id PK
-      string name
-      string address
-      datetime created_at
-      datetime updated_at
+        int id PK "Khóa chính tự động tăng"
+        string name "Tên người mua"
+        string address "Địa chỉ"
+        datetime created_at "Thời gian tạo"
+        datetime updated_at "Thời gian cập nhật"
     }
 
     %% 2. buyer_currency_funds
     BUYER_CURRENCY_FUNDS {
-      int id PK
-      int buyer_id 
-      int currency_id 
-      decimal remaining_debt
-      datetime created_at
-      datetime updated_at
+        int id PK "Khóa chính tự động tăng"
+        int buyer_id "Mã người mua"
+        int currency_id "Mã loại tiền tệ"
+        decimal remaining_debt "Công nợ phải trả còn lại"
+        datetime created_at "Thời gian tạo"
+        datetime updated_at "Thời gian cập nhật"
     }
 
     %% 3. can_tu_dong
     CAN_TU_DONG {
-      bigint id PK
-      string Msp
-      string Tenkhachhang
-      string Soxe
-      string Loaihang
-      decimal KLcotai
-      decimal KLkhongtai
-      decimal KLhang
-      decimal Dongia
-      decimal KLgo
-      int Nguoican
-      int Sophieu
-      int Thang
-      int Nam
-      text Ghichu
-      decimal phantram
-      decimal KLtru
-      string Sophieuin
-      decimal Thanhtien
-      decimal KLkhongtaiR
-      decimal KLcotaiR
-      decimal KLhangR
-      string Tenlaixe
-      string Bangchu
-      text TNgaycan
-      decimal Giocantruoc
-      datetime Giocansau
-      date Ngaycan
-      decimal solanin
-      decimal lanin
-      string chedo
-      int purchase_yard_id
-      tinyint is_receipted "Đánh dấu phiếu cân đã được lập phiếu nhập hàng hay chưa"
+        bigint id PK
+        string Msp
+        string Tenkhachhang
+        string Soxe
+        string Loaihang
+        decimal KLcotai
+        decimal KLkhongtai
+        decimal KLhang
+        decimal Dongia
+        decimal KLgo
+        int Nguoican
+        int Sophieu
+        int Thang
+        int Nam
+        text Ghichu
+        decimal phantram
+        decimal KLtru
+        string Sophieuin
+        decimal Thanhtien
+        decimal KLkhongtaiR
+        decimal KLcotaiR
+        decimal KLhangR
+        string Tenlaixe
+        string Bangchu
+        text TNgaycan
+        decimal Giocantruoc
+        datetime Giocansau
+        date Ngaycan
+        decimal solanin
+        decimal lanin
+        string chedo
+        int purchase_yard_id "FK: PURCHASE_YARDS.id"
+        tinyint is_receipted "Đánh dấu phiếu cân đã được lập phiếu nhập hàng hay chưa"
     }
 
     %% 4. cash_funds
     CASH_FUNDS {
-      int id PK
-      string fund_code
-      string fund_name
-      datetime created_at
-      datetime updated_at
+        int id PK "Khóa chính tự động tăng"
+        string fund_code "Mã quỹ"
+        string fund_name "Tên quỹ"
+        datetime created_at "Thời gian tạo"
+        datetime updated_at "Thời gian cập nhật"
     }
 
     %% 5. cash_fund_currencies
     CASH_FUND_CURRENCIES {
-      int id PK
-      int cash_fund_id
-      int currency_id
-      decimal balance
-      datetime created_at
-      datetime updated_at
+        int id PK "Khóa chính tự động tăng"
+        int cash_fund_id "FK: CASH_FUNDS.id"
+        int currency_id "FK: CURRENCIES.id"
+        decimal balance "Giá trị tồn quỹ"
+        datetime created_at "Thời gian tạo"
+        datetime updated_at "Thời gian cập nhật"
     }
 
     %% 6. cash_vouchers
     CASH_VOUCHERS {
-      int id PK
-      int sending_currency_fund_id
-      int receiving_currency_fund_id
-      decimal amount
-      int type
-      int voucher_type
-      int created_by
-      int confirmed_by
-      int approved_by
-      tinyint status
-      datetime created_at
-      datetime updated_at
+        int id PK "Khóa chính"
+        int sending_currency_fund_id "FK: liên quan đến CASH_FUND_CURRENCIES"
+        int created_by "FK: USERS.id"
+        date creation_date "Ngày lập"
+        decimal amount "Số tiền"
+        int external_item_id "Mã mặt hàng (không bắt buộc)"
+        string unit "Đơn vị tính (không bắt buộc)"
+        decimal purchase_unit_price "Đơn giá hàng mua (không bắt buộc)"
+        decimal purchase_quantity "Số lượng hàng mua (không bắt buộc)"
+        decimal sent_total "Thành tiền gửi"
+        text description "Mô tả"
+        int receiving_currency_fund_id "FK: liên quan đến CASH_FUND_CURRENCIES hoặc BUYER_CURRENCY_FUNDS hoặc PURCHASE_YARD_CURRENCY_FUNDS"
+        int confirmed_by "FK: USERS.id"
+        tinyint status "Trạng thái"
+        decimal exchange_rate "Tỷ giá (mặc định null)"
+        decimal received_total "Thành tiền nhận"
+        int approved_by "FK: USERS.id"
+        int approval_status "Trạng thái phê duyệt"
+        int voucher_type "Loại phiếu: 101,102,103,104,105,201,202,301"
+        datetime created_at "Thời gian tạo"
+        datetime updated_at "Thời gian cập nhật"
     }
 
     %% 7. currencies
     CURRENCIES {
-      int id PK
-      string name
-      string abbreviation
-      string symbol
-      datetime created_at
-      datetime updated_at
+        int id PK "Khóa chính tự động tăng"
+        string name "Tên loại tiền tệ"
+        string abbreviation "Tên viết tắt (3 ký tự)"
+        string symbol "Ký hiệu viết tắt (1 ký tự)"
+        datetime created_at "Thời gian tạo"
+        datetime updated_at "Thời gian cập nhật"
     }
 
-    %% 8. delivery_adjustments
+    %% 8. customs_expense_summary
+    CUSTOMS_EXPENSE_SUMMARY {
+        int id PK
+        decimal balance "Số dư (total_income - total_expense)"
+        datetime created_at "Thời gian tạo"
+        datetime updated_at "Thời gian cập nhật"
+    }
+
+    %% 9. custom_cash_journals
+    CUSTOM_CASH_JOURNALS {
+        int id PK
+        date created_date "Ngày lập phiếu"
+        enum transaction_type "Loại giao dịch: thu, chi"
+        decimal amount "Số tiền của giao dịch"
+        text description "Mô tả giao dịch"
+        int created_by "FK: USERS.id"
+        datetime created_at "Thời gian tạo phiếu"
+        datetime updated_at "Thời gian cập nhật phiếu"
+    }
+
+    %% 10. custom_debt_settlements
+    CUSTOM_DEBT_SETTLEMENTS {
+        int id PK
+        int payment_voucher_id "FK: CUSTOM_CASH_JOURNALS.id"
+        int followup_voucher_id "FK: CUSTOM_CASH_JOURNALS.id"
+        decimal settlement_amount "Số tiền thanh toán áp dụng cho phiếu theo dõi"
+        datetime created_at "Thời gian tạo bản ghi"
+        datetime updated_at "Thời gian cập nhật bản ghi"
+    }
+
+    %% 11. custom_purposes
+    CUSTOM_PURPOSES {
+        int id PK
+        string purpose_name "Tên mục đích"
+        int created_by "FK: USERS.id"
+        datetime created_at "Thời gian tạo bản ghi"
+        datetime updated_at "Thời gian cập nhật bản ghi"
+        decimal amount "Số tiền liên quan đến mục đích"
+        date voucher_date "Ngày lập phiếu"
+        text description "Mô tả phiếu theo dõi"
+        string voucher_number "Số phiếu tự động tạo"
+        decimal remaining_amount "Số tiền còn lại chưa thanh toán"
+    }
+
+    %% 12. delivery_adjustments
     DELIVERY_ADJUSTMENTS {
-      int id PK
-      int receipt_id
-      decimal old_quantity
-      decimal new_quantity
-      decimal old_price
-      decimal new_price
-      tinyint status
-      int created_by
+        int id PK "Khóa chính tự động tăng"
+        int delivery_id "Mã số phiếu xuất hàng tại bãi"
+        decimal old_weight "Khối lượng cũ"
+        decimal old_unit_price "Đơn giá cũ"
+        decimal new_weight "Khối lượng mới"
+        decimal new_unit_price "Đơn giá mới"
+        tinyint status "Trạng thái"
+        int created_by "FK: USERS.id"
+        datetime created_at "Thời gian tạo"
+        datetime updated_at "Thời gian cập nhật"
     }
 
-    %% 9. external_purchase_items
+    %% 13. external_purchase_items
     EXTERNAL_PURCHASE_ITEMS {
-      int id PK
-      string item_code
-      string unit
-      datetime created_at
-      datetime updated_at
+        int id PK "Khóa chính"
+        string item_code "Mã mặt hàng"
+        string unit "Đơn vị tính (không bắt buộc)"
+        datetime created_at "Thời gian tạo"
+        datetime updated_at "Thời gian cập nhật"
     }
 
-    %% 10. migrations
+    %% 14. migrations
     MIGRATIONS {
-      bigint id PK
-      string version
-      string class
-      string group
-      string namespace
-      int time
-      int batch
+        bigint id PK
+        string version
+        string class
+        string group
+        string namespace
+        int time
+        int batch
     }
 
-    %% 11. permissions
+    %% 15. permissions
     PERMISSIONS {
-      int id PK
-      string name
-      text description
-      string group
-      string action
-      string method
-      tinyint is_main_menu
-      string icon_class
-      datetime created_at
-      datetime updated_at
+        int id PK
+        string name
+        text description
+        string group
+        string action
+        string method
+        datetime created_at
+        datetime updated_at
+        tinyint is_main_menu "Có hiển thị trong menu chính (1: Có, 0: Không)"
+        string icon_class "Lớp icon Font Awesome"
     }
 
-    %% 12. product_categories
+    %% 16. product_categories
     PRODUCT_CATEGORIES {
-      int id PK
-      string name
-      string abbreviation
-      datetime created_at
-      datetime updated_at
+        int id PK "Khóa chính tự động tăng"
+        string name "Tên loại mặt hàng"
+        string abbreviation "Tên viết tắt (3 ký tự)"
+        datetime created_at "Thời gian tạo"
+        datetime updated_at "Thời gian cập nhật"
     }
 
-    %% 13. purchase_yards
+    %% 17. purchase_yards
     PURCHASE_YARDS {
-      int id PK
-      string yard_code
-      string yard_name
-      string client_api_key
-      tinyint status
-      datetime created_at
-      datetime updated_at
+        int id PK
+        string yard_code
+        string yard_name
+        string client_api_key
+        tinyint status "Mặc định 1"
+        datetime created_at
+        datetime updated_at
     }
 
-    %% 14. purchase_yard_currency_funds
+    %% 18. purchase_yard_currency_funds
     PURCHASE_YARD_CURRENCY_FUNDS {
-      int id PK
-      int yard_id
-      int currency_id
-      decimal balance
-      datetime created_at
-      datetime updated_at
+        int id PK "Khóa chính tự động tăng"
+        int purchase_yard_id "FK: PURCHASE_YARDS.id"
+        int currency_id "FK: CURRENCIES.id"
+        decimal balance "Giá trị tồn quỹ"
+        datetime created_at "Thời gian tạo"
+        datetime updated_at "Thời gian cập nhật"
     }
 
-    %% 15. purchase_yard_goods_receipts
+    %% 19. purchase_yard_goods_receipts
     PURCHASE_YARD_GOODS_RECEIPTS {
-      int id PK
-      int yard_id
-      date input_date
-      string vehicle_number
-      int category_id
-      decimal quantity
-      decimal unit_price
-      int created_by
-      datetime created_at
-      datetime updated_at
+        int id PK "Khóa chính tự động tăng"
+        int purchase_yard_id "FK: PURCHASE_YARDS.id"
+        string vehicle_number "Biển số xe (không bắt buộc)"
+        int category_id "FK: PRODUCT_CATEGORIES.id"
+        decimal weight "Khối lượng"
+        decimal unit_price "Đơn giá"
+        datetime created_at "Thời gian tạo"
+        datetime updated_at "Thời gian cập nhật"
     }
 
-    %% 16. purchase_yard_product_info
+    %% 20. purchase_yard_product_info
     PURCHASE_YARD_PRODUCT_INFO {
-      int id PK
-      int purchase_yard_id
-      int category_id
-      int currency_id
-      decimal stock_weight
-      decimal average_price
-      datetime created_at
-      datetime updated_at
+        int id PK "Khóa chính tự động tăng"
+        int purchase_yard_id "FK: PURCHASE_YARDS.id"
+        int category_id "FK: PRODUCT_CATEGORIES.id"
+        int currency_id "FK: CURRENCIES.id"
+        decimal stock_weight "Khối lượng tồn kho"
+        decimal average_price "Đơn giá bình quân"
+        datetime created_at "Thời gian tạo"
+        datetime updated_at "Thời gian cập nhật"
     }
 
-    %% 17. receipt_adjustments
+    %% 21. receipt_adjustments
     RECEIPT_ADJUSTMENTS {
-      int id PK
-      int receipt_id
-      decimal old_quantity
-      decimal new_quantity
-      decimal old_price
-      decimal new_price
-      tinyint status
-      int created_by
-      int approved_by
+        int id PK "Khóa chính tự động tăng"
+        int receipt_id "Mã số phiếu nhập hàng"
+        decimal old_weight "Khối lượng cũ"
+        decimal old_unit_price "Đơn giá cũ"
+        decimal new_weight "Khối lượng mới"
+        decimal new_unit_price "Đơn giá mới"
+        tinyint status "Trạng thái"
+        int created_by "FK: USERS.id"
+        int reviewed_by "FK: USERS.id"
+        datetime created_at "Thời gian tạo"
+        datetime updated_at "Thời gian cập nhật"
     }
 
-    %% 18. roles
+    %% 22. roles
     ROLES {
-      int id PK
-      string name
-      text description
-      tinyint target_type
-      datetime created_at
-      datetime updated_at
+        int id PK
+        string name
+        text description
+        datetime created_at
+        datetime updated_at
+        tinyint target_type "Loại đối tượng (0: mặc định, 1: đặc biệt)"
     }
 
-    %% 19. role_permission
+    %% 23. role_permission
     ROLE_PERMISSION {
-      int id PK
-      int role_id
-      int permission_id
+        int role_id "FK: ROLES.id"
+        int permission_id "FK: PERMISSIONS.id"
     }
 
-    %% 20. settings
+    %% 24. settings
     SETTINGS {
-      string key PK
-      longtext value
+        string key PK "Khoá cấu hình (mã cấu hình hệ thống)"
+        longtext value "Giá trị cấu hình"
+        datetime created_at "Thời gian tạo"
+        datetime updated_at "Thời gian cập nhật"
     }
 
-    %% 21. stock_adjustments
+    %% 25. stock_adjustments
     STOCK_ADJUSTMENTS {
-      int id PK
-      int yard_id
-      decimal old_stock
-      decimal new_stock
-      int created_by
+        int id PK "Khóa chính tự động tăng"
+        int warehouse_id "FK: WAREHOUSES.id"
+        int purchase_yard_product_info_id "FK: PURCHASE_YARD_PRODUCT_INFO.id"
+        int created_by "FK: USERS.id"
+        decimal old_stock "Tồn kho cũ"
+        decimal new_stock "Tồn kho mới"
+        datetime created_at "Thời gian tạo"
+        datetime updated_at "Thời gian cập nhật"
     }
 
-    %% 22. trips
+    %% 26. trips
     TRIPS {
-      int id PK
-      string code
-      string vehicle_number
-      decimal total_weight
-      decimal net_weight
-      decimal clean_weight
-      int product_category_id
-      int factory_id
-      int purchase_yard_currency_fund_id
-      datetime created_at
+        int id PK "Khóa chính tự động tăng"
+        string trip_code "Mã số chuyến xe"
+        string receipt_number "Số phiếu"
+        string vehicle_number "Biển số xe"
+        decimal avg_export_unit_price "Đơn giá xuất bình quân"
+        decimal export_total_amount "Thành tiền xuất"
+        decimal total_export_weight "Tổng trọng lượng xuất"
+        int category_id "FK: PRODUCT_CATEGORIES.id"
+        date purchase_yard_weighing_date "Ngày cân tại bãi thu mua"
+        date factory_weighing_date "Ngày cân tại nhà máy"
+        int factory_id "Mã Nhà máy"
+        int purchase_yard_currency_fund_id "FK: PURCHASE_YARD_CURRENCY_FUNDS.id"
+        string document_number "Số chứng từ (không bắt buộc)"
+        decimal sold_weight "Khối lượng hàng bán"
+        decimal net_weight "Khối lượng sạch"
+        decimal selling_unit_price "Đơn giá bán"
+        decimal powder_percentage "Độ bột"
+        decimal freight_fee "Tiền cước"
+        decimal customs_cost "Chi phí hải quan"
+        decimal other_cost "Chi phí khác"
+        decimal total_goods_amount "Tổng tiền hàng"
+        decimal impurity_percentage "Tỷ lệ tạp chất %"
+        decimal impurity_kg "Tỷ lệ tạp chất kg"
+        decimal total_freight_amount "Tổng tiền cước"
+        decimal remaining_goods_debt "Công nợ tiền hàng phải trả còn lại"
+        decimal remaining_freight_debt "Công nợ tiền cước phải trả còn lại"
+        decimal remaining_customs_cost "Chi phí hải quan phải trả còn lại"
+        decimal remaining_other_cost "Chi phí khác phải trả còn lại"
+        datetime created_at "Thời gian tạo"
+        datetime updated_at "Thời gian cập nhật"
     }
 
-    %% 23. trip_details
+    %% 27. trip_details
     TRIP_DETAILS {
-      int id PK
-      int trip_id
-      int yard_id
-      int buyer_currency_fund_id
-      int warehouse_id
-      decimal export_quantity
-      decimal export_price
-      decimal total_amount
-      int created_by
+        int id PK "Khóa chính tự động tăng"
+        int purchase_yard_id "FK: PURCHASE_YARDS.id"
+        int created_by "FK: USERS.id"
+        int trip_id "FK: TRIPS.id"
+        int buyer_currency_fund_id "FK: BUYER_CURRENCY_FUNDS.id"
+        int warehouse_id "FK: WAREHOUSES.id"
+        decimal export_weight "Khối lượng xuất"
+        decimal export_unit_price "Đơn giá xuất"
+        decimal export_total_amount "Thành tiền xuất"
+        decimal sold_weight "Khối lượng hàng bán"
+        decimal net_weight "Khối lượng sạch"
+        decimal selling_unit_price "Đơn giá bán"
+        decimal powder_percentage "Độ bột"
+        decimal freight_fee "Tiền cước"
+        decimal customs_cost "Chi phí hải quan"
+        decimal other_cost "Chi phí khác"
+        decimal total_goods_amount "Tổng tiền hàng"
+        decimal impurity_percentage "Tỷ lệ tạp chất %"
+        decimal impurity_kg "Tỷ lệ tạp chất kg"
+        decimal total_freight_amount "Tổng tiền cước"
+        datetime created_at "Thời gian tạo"
+        datetime updated_at "Thời gian cập nhật"
     }
 
-    %% 24. users
+    %% 28. users
     USERS {
-      int id PK
-      string username
-      string password
-      string remember_token
-      string fullname
-      tinyint status
-      datetime created_at
-      datetime updated_at
+        int id PK
+        string username
+        string password
+        string remember_token
+        tinyint status "Mặc định 1"
+        datetime created_at
+        datetime updated_at
+        string fullname "Họ tên"
     }
 
-    %% 25. user_role_assignments
+    %% 29. user_role_assignments
     USER_ROLE_ASSIGNMENTS {
-      int id PK
-      int user_id
-      int role_id
-      int purchase_yard_id
-      int cash_fund_id
-      int warehouse_id
-      datetime created_at
-      datetime updated_at
+        int id PK
+        int user_id "FK: USERS.id"
+        int role_id "FK: ROLES.id"
+        int purchase_yard_id "FK: PURCHASE_YARDS.id"
+        int cash_fund_id "FK: CASH_FUNDS.id"
+        int warehouse_id "FK: WAREHOUSES.id"
+        datetime created_at
+        datetime updated_at
     }
 
-    %% 26. voucher_details
+    %% 30. voucher_details
     VOUCHER_DETAILS {
-      int id PK
-      int cash_voucher_id
-      int trip_id
-      decimal paid_debt
-      decimal remaining_debt
-      int created_by
-      datetime created_at
+        int id PK "Khóa chính tự động tăng"
+        int voucher_id "FK: CASH_VOUCHERS.id"
+        int trip_id "FK: TRIPS.id"
+        decimal allocated_debt "Phân bổ công nợ đã trả"
+        decimal remaining_trip_debt "Công nợ còn lại của chuyến"
+        decimal freight_fee "Tiền cước"
+        decimal remaining_freight_fee "Tiền cước còn lại"
+        decimal customs_fee "Phí hải quan"
+        decimal remaining_customs_fee "Phí hải quan còn lại"
+        decimal other_cost "Chi phí khác"
+        decimal remaining_other_cost "Chi phí khác còn lại"
+        int created_by "FK: USERS.id"
+        datetime created_at "Thời gian tạo"
+        datetime updated_at "Thời gian cập nhật"
     }
 
-    %% 27. warehouse_product_categories
-    WAREHOUSE_PRODUCT_CATEGORIES {
-      int id PK
-      int warehouse_id
-      int product_category_id
-      int stock
-      decimal avg_price
-      datetime created_at
-      datetime updated_at
-    }
-
-    %% 28. warehouses
+    %% 31. warehouses
     WAREHOUSES {
-      int id PK
-      string name
-      string address
-      datetime created_at
-      datetime updated_at
+        int id PK "Khóa chính của bảng, tự tăng"
+        string name "Tên kho"
+        string address "Địa chỉ của kho"
+        datetime created_at "Thời gian tạo bản ghi"
+        datetime updated_at "Thời gian cập nhật bản ghi"
     }
 
-    %% =====================================================
-    %% Các mối quan hệ (foreign key) – hiển thị dưới dạng kết nối
-    %% =====================================================
+    %% 32. warehouse_product_categories
+    WAREHOUSE_PRODUCT_CATEGORIES {
+        int id PK "Khóa chính của bảng, tự tăng"
+        int warehouse_id "FK: WAREHOUSES.id"
+        int product_category_id "FK: PRODUCT_CATEGORIES.id"
+        int stock "Tồn kho"
+        decimal avg_price "Đơn giá bình quân"
+        datetime created_at "Thời gian tạo bản ghi"
+        datetime updated_at "Thời gian cập nhật bản ghi"
+    }
 
-    BUYER_CURRENCY_FUNDS }o--|| BUYERS : buyer_id
-    BUYER_CURRENCY_FUNDS }o--|| CURRENCIES : currency_id
-    
-    PURCHASE_YARD_CURRENCY_FUNDS }o--|| PURCHASE_YARDS : yard_id
-    PURCHASE_YARD_CURRENCY_FUNDS }o--|| CURRENCIES : currency_id
-    
-    CASH_FUND_CURRENCIES }o--|| CASH_FUNDS : cash_fund_id
-    CASH_FUND_CURRENCIES }o--|| CURRENCIES : currency_id
-    
+    %% Relationships
+    BUYER_CURRENCY_FUNDS ||--o{ BUYERS : "buyer_id"
+    BUYER_CURRENCY_FUNDS ||--o{ CURRENCIES : "currency_id"
+    CAN_TU_DONG }|--|| PURCHASE_YARDS : "purchase_yard_id"
+    CASH_FUND_CURRENCIES ||--|| CASH_FUNDS : "cash_fund_id"
+    CASH_FUND_CURRENCIES ||--o{ CURRENCIES : "currency_id"
+    CASH_VOUCHERS }|--|| USERS : "created_by"
     CASH_VOUCHERS }o--|| CASH_FUND_CURRENCIES : sending_currency_fund_id
     CASH_VOUCHERS }o--|| CASH_FUND_CURRENCIES : receiving_currency_fund_id
-    CASH_VOUCHERS }o--|| USERS : created_by
     CASH_VOUCHERS }o--|| USERS : confirmed_by
-    CASH_VOUCHERS }o--|| USERS : approved_by
-
+    CUSTOM_CASH_JOURNALS }|--|| USERS : "created_by"
+    CUSTOM_DEBT_SETTLEMENTS ||--|| CUSTOM_CASH_JOURNALS : "payment_voucher_id"
+    CUSTOM_DEBT_SETTLEMENTS ||--|| CUSTOM_CASH_JOURNALS : "followup_voucher_id"
+    CUSTOM_PURPOSES }|--|| USERS : "created_by"
+    DELIVERY_ADJUSTMENTS }|--|| USERS : "created_by"
     DELIVERY_ADJUSTMENTS }o--|| PURCHASE_YARD_GOODS_RECEIPTS : receipt_id
-    DELIVERY_ADJUSTMENTS }o--|| USERS : created_by
-    
-    PURCHASE_YARD_GOODS_RECEIPTS }o--|| PURCHASE_YARDS : yard_id
-    PURCHASE_YARD_GOODS_RECEIPTS }o--|| PRODUCT_CATEGORIES : category_id
-    PURCHASE_YARD_GOODS_RECEIPTS }o--|| USERS : created_by
-    
+    PURCHASE_YARD_CURRENCY_FUNDS ||--o{ PURCHASE_YARDS : "purchase_yard_id"
+    PURCHASE_YARD_CURRENCY_FUNDS ||--o{ CURRENCIES : "currency_id"
+    PURCHASE_YARD_GOODS_RECEIPTS ||--|| PURCHASE_YARDS : "purchase_yard_id"
+    PURCHASE_YARD_GOODS_RECEIPTS ||--o{ PRODUCT_CATEGORIES : "category_id"
+    PURCHASE_YARD_PRODUCT_INFO ||--|| PURCHASE_YARDS : "purchase_yard_id"
+    PURCHASE_YARD_PRODUCT_INFO ||--o{ PRODUCT_CATEGORIES : "category_id"
+    PURCHASE_YARD_PRODUCT_INFO ||--o{ CURRENCIES : "currency_id"
+    RECEIPT_ADJUSTMENTS }|--|| USERS : "created_by"
+    RECEIPT_ADJUSTMENTS }|--|| USERS : "reviewed_by"
     RECEIPT_ADJUSTMENTS }o--|| PURCHASE_YARD_GOODS_RECEIPTS : receipt_id
-    RECEIPT_ADJUSTMENTS }o--|| USERS : created_by
-    RECEIPT_ADJUSTMENTS }o--|| USERS : approved_by
-    
-    PURCHASE_YARD_PRODUCT_INFO }o--|| PURCHASE_YARDS : purchase_yard_id
-    PURCHASE_YARD_PRODUCT_INFO }o--|| PRODUCT_CATEGORIES : category_id
-    PURCHASE_YARD_PRODUCT_INFO }o--|| CURRENCIES : currency_id
-    
-    TRIPS }o--|| PRODUCT_CATEGORIES : product_category_id
-    TRIPS }o--|| BUYERS : factory_id
-    TRIPS }o--|| PURCHASE_YARD_CURRENCY_FUNDS : purchase_yard_currency_fund_id
-    
-    TRIP_DETAILS }o--|| TRIPS : trip_id
-    TRIP_DETAILS }o--|| PURCHASE_YARDS : yard_id
-    TRIP_DETAILS }o--|| BUYER_CURRENCY_FUNDS : buyer_currency_fund_id
-    TRIP_DETAILS }o--|| USERS : created_by
-    TRIP_DETAILS }o--|| WAREHOUSES : warehouse_id
-    
-    STOCK_ADJUSTMENTS }o--|| PURCHASE_YARDS : yard_id
-    STOCK_ADJUSTMENTS }o--|| USERS : created_by
-    
-    USER_ROLE_ASSIGNMENTS }o--|| USERS : user_id
-    USER_ROLE_ASSIGNMENTS }o--|| ROLES : role_id
-    USER_ROLE_ASSIGNMENTS }o--|| PURCHASE_YARDS : purchase_yard_id
-    USER_ROLE_ASSIGNMENTS }o--|| CASH_FUNDS : cash_fund_id
-    USER_ROLE_ASSIGNMENTS }o--|| WAREHOUSES : warehouse_id
-    
-    VOUCHER_DETAILS }o--|| CASH_VOUCHERS : cash_voucher_id
-    VOUCHER_DETAILS }o--|| TRIPS : trip_id
-    VOUCHER_DETAILS }o--|| USERS : created_by
-    
-    ROLE_PERMISSION }o--|| ROLES : role_id
-    ROLE_PERMISSION }o--|| PERMISSIONS : permission_id
-    
-    WAREHOUSE_PRODUCT_CATEGORIES }o--|| WAREHOUSES : warehouse_id
-    WAREHOUSE_PRODUCT_CATEGORIES }o--|| PRODUCT_CATEGORIES : product_category_id
-
-    CAN_TU_DONG }o--|| PURCHASE_YARDS : purchase_yard_id 
+    ROLE_PERMISSION ||--|| ROLES : "role_id"
+    ROLE_PERMISSION ||--|| PERMISSIONS : "permission_id"
+    STOCK_ADJUSTMENTS ||--|| WAREHOUSES : "warehouse_id"
+    STOCK_ADJUSTMENTS }o--|| PURCHASE_YARDS : "purchase_yard_id"
+    STOCK_ADJUSTMENTS ||--|| PURCHASE_YARD_PRODUCT_INFO : "purchase_yard_product_info_id"
+    STOCK_ADJUSTMENTS }|--|| USERS : "created_by"
+    TRIPS ||--o{ PRODUCT_CATEGORIES : "category_id"
+    TRIPS ||--|| PURCHASE_YARD_CURRENCY_FUNDS : "purchase_yard_currency_fund_id"
+    TRIP_DETAILS ||--|| TRIPS : "trip_id"
+    TRIP_DETAILS ||--|| PURCHASE_YARDS : "purchase_yard_id"
+    TRIP_DETAILS ||--|| BUYER_CURRENCY_FUNDS : "buyer_currency_fund_id"
+    TRIP_DETAILS ||--|| WAREHOUSES : "warehouse_id"
+    VOUCHER_DETAILS ||--|| CASH_VOUCHERS : "voucher_id"
+    VOUCHER_DETAILS ||--|| TRIPS : "trip_id"
+    VOUCHER_DETAILS }|--|| USERS : "created_by"
+    USER_ROLE_ASSIGNMENTS ||--|| USERS : "user_id"
+    USER_ROLE_ASSIGNMENTS ||--|| ROLES : "role_id"
+    USER_ROLE_ASSIGNMENTS ||--|| PURCHASE_YARDS : "purchase_yard_id"
+    USER_ROLE_ASSIGNMENTS ||--|| CASH_FUNDS : "cash_fund_id"
+    USER_ROLE_ASSIGNMENTS ||--|| WAREHOUSES : "warehouse_id"
+    WAREHOUSE_PRODUCT_CATEGORIES ||--|| WAREHOUSES : "warehouse_id"
+    WAREHOUSE_PRODUCT_CATEGORIES ||--|| PRODUCT_CATEGORIES : "product_category_id"

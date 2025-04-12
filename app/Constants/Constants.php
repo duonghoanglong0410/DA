@@ -12,4 +12,7 @@ class Constants
     
     // Số lượng trang hiển thị trước và sau trang hiện tại trong phân trang
     const PAGINATION_LINKS_PER_SIDE = 2;
+    
+    // Chọn phiếu cân xuất kho: true = chỉ chọn 1 dòng, false = chọn nhiều dòng
+    const SINGLE_SCALE_SELECTION = true;
 } 

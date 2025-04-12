@@ -402,6 +402,7 @@
             // Vô hiệu hóa lại category dropdown sau khi hiển thị form
             $('#category_id').prop('disabled', true);
             $('#category_id').parent('.form-group').addClass('opacity-75');
+            $('#category_id').next('small.form-text').remove();
             $('#category_id').after('<small class="form-text text-muted">Loại hàng được xác định từ phiếu cân đã chọn</small>');
         });
         

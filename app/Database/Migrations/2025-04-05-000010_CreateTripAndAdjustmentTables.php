@@ -61,6 +61,7 @@ class CreateTripAndAdjustmentTables extends Migration
             ],
             'factory_weighing_date' => [
                 'type'    => 'DATE',
+                'null'    => true,
                 'comment' => 'Ngày cân tại nhà máy'
             ],
             'factory_id' => [

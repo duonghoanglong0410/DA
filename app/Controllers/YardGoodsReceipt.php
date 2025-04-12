@@ -102,26 +102,38 @@ class YardGoodsReceipt extends BaseController
         }
         
         // Lấy danh sách loại tiền tệ từ purchase_yard_product_info
-        $currencies = [];
-        $yardProductInfos = $this->purchaseYardProductInfoModel->getInfoByYardIds($yardIds);
-        
-        // Nhóm theo bãi để xác định bãi nào có nhiều loại tiền tệ
         $yardCurrencies = [];
-        foreach ($yardProductInfos as $info) {
-            if (!isset($yardCurrencies[$info['purchase_yard_id']])) {
-                $yardCurrencies[$info['purchase_yard_id']] = [];
+        $allYardCurrencies = []; // Tập hợp tất cả các loại tiền tệ được sử dụng trong các bãi
+        
+        foreach ($authorizedYards as $yard) {
+            $yardId = $yard['purchase_yard_id'];
+            // Lấy các loại tiền tệ thực tế đang được sử dụng trong kho của bãi
+            $currenciesForYard = $this->purchaseYardProductInfoModel->getCurrenciesByYardId($yardId);
+                
+            $currencyIds = [];
+            foreach ($currenciesForYard as $row) {
+                $currencyIds[] = $row['currency_id'];
+                if (!in_array($row['currency_id'], $allYardCurrencies)) {
+                    $allYardCurrencies[] = $row['currency_id'];
+                }
             }
-            $yardCurrencies[$info['purchase_yard_id']][] = $info['currency_id'];
+            
+            if (!empty($currencyIds)) {
+                $currencies = $this->currencyModel->whereIn('id', $currencyIds)->findAll();
+                $yardCurrencies[$yardId] = $currencies;
+            } else {
+                $yardCurrencies[$yardId] = [];
+            }
+        }
+        
+        // Lấy chi tiết của các loại tiền tệ được sử dụng
+        $currencies = [];
+        if (!empty($allYardCurrencies)) {
+            $currencies = $this->currencyModel->whereIn('id', $allYardCurrencies)->findAll();
         }
         
         // JSON encode yardCurrencies để sử dụng trong JavaScript
         $yardCurrenciesJson = json_encode($yardCurrencies);
-        
-        // Lấy thông tin tiền tệ
-        $currencyIds = array_unique(array_column($yardProductInfos, 'currency_id'));
-        if (!empty($currencyIds)) {
-            $currencies = $this->currencyModel->whereIn('id', $currencyIds)->findAll();
-        }
         
         // Gán dữ liệu ra view
         $this->assign('today_can_data', $canData);
