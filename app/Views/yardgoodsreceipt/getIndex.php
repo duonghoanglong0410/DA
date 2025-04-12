@@ -7,8 +7,9 @@
                     <h5 class="mb-0">Chọn kiểu lập phiếu</h5>
                 </div>
                 <div class="card-body d-flex flex-column align-items-center">
-                    <button id="btn-receipt-by-vehicle" class="btn btn-success w-75 py-4 mb-4 fs-5">Lập phiếu theo xe</button>
-                    <button id="btn-receipt-summary" class="btn btn-info w-75 py-4 fs-5">Lập phiếu tổng hợp</button>
+                    <button id="btn-receipt-by-vehicle" class="btn btn-success w-75 py-4 mb-4 fs-5 btn-lg py-3">Lập phiếu theo xe</button>
+                    <button id="btn-receipt-summary" class="btn btn-info w-75 py-4 fs-5 btn-lg py-3 mb-4">Lập phiếu tổng hợp</button>
+                    <button id="btn-cancel" class="btn btn-secondary w-75 py-4 fs-5 btn-lg py-3" onclick="history.back()">Quay lại</button>
                 </div>
             </div>
         </div>
@@ -23,11 +24,11 @@
                 </div>
                 <div class="card-body d-flex flex-column align-items-center">
                     {products}
-                    <button class="btn-product-type btn btn-outline-primary w-75 py-3 mb-3 fs-5" data-name="{name}" data-id="{id}">{name}</button>
+                    <button class="btn-product-type btn btn-outline-primary w-75 py-3 mb-3 fs-5 btn-lg py-3" data-name="{name}" data-id="{id}">{name}</button>
                     {/products}
                 </div>
                 <div class="mt-3 d-flex justify-content-start">
-                    <button id="btn-back-to-options" class="btn btn-secondary">Quay lại</button>
+                    <button id="btn-back-to-options" class="btn btn-secondary btn-lg py-3">Quay lại</button>
                 </div>
             </div>
         </div>
@@ -40,7 +41,6 @@
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">Phiếu cân NK ngày {current_date} - <span id="selected-product-type">Tất cả</span></h5>
                 </div>
-                <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-striped table-bordered">
                             <thead>
@@ -76,11 +76,21 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
-                <div class="mt-3 d-flex justify-content-between">
-                    <button id="btn-back" class="btn btn-secondary">Quay lại</button>
-                    <button id="btn-refresh" class="btn btn-info">Làm mới</button>
-                    <button id="btn-next" class="btn btn-primary">Tiếp theo</button>
+                <div class="mt-3">
+                    <div class="row g-2">
+                        <div class="col-6 col-md-3">
+                            <button id="btn-back" class="btn btn-secondary w-100 btn-lg py-3">Quay lại</button>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <button id="btn-select-all" class="btn btn-success w-100 btn-lg py-3">Chọn tất cả</button>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <button id="btn-refresh" class="btn btn-info w-100 btn-lg py-3">Làm mới</button>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <button id="btn-next" class="btn btn-primary w-100 btn-lg py-3">Tiếp theo</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -92,7 +102,7 @@
             <div class="row justify-content-center">
                 <div class="col-12 col-md-8 col-lg-6">
                     <div class="form-box getDetail">
-                        <div class="card-header bg-success text-white">
+                        <div class="card-header bg-primary text-white">
                             <h5 class="mb-0">Thông tin phiếu nhập hàng</h5>
                         </div>
                         <div class="card-body">
@@ -142,8 +152,8 @@
                             <input type="hidden" id="selected_items" name="selected_items" value="">
                         </div>
                         <div class="mt-3 d-flex justify-content-between">
-                            <button type="button" id="btn-back-to-list" class="btn btn-secondary">Quay lại</button>
-                            <button type="submit" class="btn btn-primary">Lập phiếu nhập hàng</button>
+                            <button type="button" id="btn-back-to-list" class="btn btn-secondary btn-lg py-3">Quay lại</button>
+                            <button type="submit" class="btn btn-primary btn-lg py-3">Lập phiếu nhập hàng</button>
                         </div>
                     </div>
                 </div>
@@ -259,6 +269,69 @@
             $('#vehicle_number').val('');
             $('#quantity').val('');
             $('#unit_price').val('');
+        });
+        
+        // Event handler cho nút chọn tất cả
+        $('#btn-select-all').on('click', function() {
+            // Chỉ chọn các dòng đang hiển thị (không bị ẩn)
+            $('.selectable-row:visible').each(function() {
+                const $row = $(this);
+                const rowId = $row.data('id');
+                const loaiHang = $row.data('loaihang');
+                const klHang = parseFloat($row.data('klhang')) || 0;
+                const donGia = parseFloat($row.data('dongia')) || 0;
+                const soXe = $row.data('soxe');
+                const yardId = $row.data('yard-id');
+                
+                // Kiểm tra nếu dòng chưa được chọn
+                if (!$row.hasClass('selected')) {
+                    // Kiểm tra nếu loại hàng phù hợp với loại đã chọn
+                    // hoặc nếu chưa có loại hàng nào được chọn
+                    if (selectedProductType === '' || selectedProductType === loaiHang) {
+                        // Nếu chưa có loại hàng nào được chọn, thiết lập loại đầu tiên
+                        if (selectedProductType === '') {
+                            selectedProductType = loaiHang;
+                        }
+                        
+                        // Thêm vào mảng selectedRows nếu chưa có
+                        const existingRow = selectedRows.find(item => item.id === rowId);
+                        if (!existingRow) {
+                            selectedRows.push({
+                                id: rowId,
+                                loaiHang: loaiHang,
+                                klHang: klHang,
+                                donGia: donGia,
+                                soXe: soXe,
+                                yardId: yardId
+                            });
+                        }
+                        
+                        // Thêm lớp selected cho dòng
+                        $row.addClass('selected');
+                    }
+                }
+            });
+            
+            // Cập nhật trạng thái các dòng
+            updateRowSelectionState();
+            
+            // Cập nhật thông tin form
+            updateFormInfo();
+            
+            // Cập nhật yardId trong dropdown theo dòng đầu tiên (nếu có)
+            if (selectedRows.length > 0) {
+                $('#yard_id').val(selectedRows[0].yardId);
+                showHideCurrencySelect(selectedRows[0].yardId);
+                
+                // Tìm và chọn category_id tương ứng
+                $('#category_id option').each(function() {
+                    //
+                    if ($(this).data('name').toLowerCase() === selectedProductType.toLowerCase()) {
+                        $('#category_id').val($(this).val());
+                        return false; // break loop
+                    }
+                });
+            }
         });
         
         // Event handler cho nút làm mới
