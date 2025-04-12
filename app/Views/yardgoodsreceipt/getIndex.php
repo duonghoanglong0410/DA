@@ -79,6 +79,7 @@
                 </div>
                 <div class="mt-3 d-flex justify-content-between">
                     <button id="btn-back" class="btn btn-secondary">Quay lại</button>
+                    <button id="btn-refresh" class="btn btn-info">Làm mới</button>
                     <button id="btn-next" class="btn btn-primary">Tiếp theo</button>
                 </div>
             </div>
@@ -160,6 +161,37 @@
         // Mảng lưu trữ các dòng đã chọn
         let selectedRows = [];
         
+        // Kiểm tra nếu có trạng thái lưu trong localStorage
+        const savedState = localStorage.getItem('yardReceiptState');
+        const savedProductName = localStorage.getItem('yardReceiptProductName');
+        const savedProductId = localStorage.getItem('yardReceiptProductId');
+        
+        if (savedState === 'receipt-list' && savedProductName) {
+            // Khôi phục trạng thái trước đó
+            receiptMode = 'byVehicle';
+            $('#option-buttons').hide();
+            $('#receipt-list-section').show();
+            
+            // Khôi phục tên loại hàng đã chọn
+            filteredProductName = savedProductName;
+            $('#selected-product-type').text(filteredProductName);
+            
+            // Xóa trạng thái lưu để tránh lặp lại
+            localStorage.removeItem('yardReceiptState');
+            localStorage.removeItem('yardReceiptProductName');
+            localStorage.removeItem('yardReceiptProductId');
+            
+            // Kích hoạt lọc danh sách phiếu cân sau khi trang đã tải xong
+            setTimeout(function() {
+                filterReceiptsByProductType(filteredProductName);
+                
+                // Chọn giá trị category_id tương ứng nếu có
+                if (savedProductId) {
+                    $('#category_id').val(savedProductId);
+                }
+            }, 100);
+        }
+        
         // Dữ liệu về loại tiền tệ của các bãi
         const yardCurrencies = {yard_currencies_json};
         
@@ -215,7 +247,7 @@
             // Reset form data
             $('#selected_items').val('');
             
-            // Tự động chọn giá trị đầu tiên cho mỗi dropdown
+            // Tự động chọn giá trị đầu tiên cho các dropdown
             selectFirstOptions();
             
             // Hiển thị currency nếu yard đầu tiên có nhiều loại tiền tệ
@@ -227,6 +259,17 @@
             $('#vehicle_number').val('');
             $('#quantity').val('');
             $('#unit_price').val('');
+        });
+        
+        // Event handler cho nút làm mới
+        $('#btn-refresh').on('click', function() {
+            // Lưu trạng thái hiện tại vào localStorage
+            localStorage.setItem('yardReceiptState', 'receipt-list');
+            localStorage.setItem('yardReceiptProductName', filteredProductName);
+            localStorage.setItem('yardReceiptProductId', $('#category_id').val());
+            
+            // Reload trang
+            window.location.reload();
         });
         
         // Event handlers cho các nút điều hướng
