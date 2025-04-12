@@ -135,8 +135,9 @@
                     </div>
                     {/no_trucks_message}
                 </div>
-                <div class="mt-3 d-flex justify-content-start">
+                <div class="mt-3 d-flex justify-content-between">
                     <button id="btn-back-to-internal-from-truck" class="btn btn-secondary btn-lg py-3">Quay lại</button>
+                    <button id="btn-truck-refresh" class="btn btn-info btn-lg py-3">Làm mới</button>
                 </div>
             </div>
         </div>
@@ -214,6 +215,14 @@
                                 <input type="number" id="unit_price" name="unit_price" class="form-control" step="1" required>
                             </div>
                             
+                            <!-- Hiển thị tổng tiền -->
+                            <div class="form-group mb-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <label class="form-label">Tổng tiền:</label>
+                                    <span id="total_amount" class="fs-5 fw-bold">0</span>
+                                </div>
+                            </div>
+                            
                             <input type="hidden" id="selected_method" name="selected_method" value="">
                             <input type="hidden" id="selected_items" name="selected_items" value="">
                             <input type="hidden" id="selected_truck" name="selected_truck" value="">
@@ -282,6 +291,9 @@
         let selectedTruck = null; // Thông tin xe tải đã chọn
         let existingTruckId = null; // ID của xe tải hiện có khi chọn sử dụng xe cũ
         
+        // Biến lưu trữ ký hiệu tiền tệ hiện tại
+        let currentCurrencySymbol = 'VNĐ';
+        
         // Kiểm tra nếu chỉ có một loại mặt hàng
         const singleProductCategory = '{single_product_category}' === 'true';
         
@@ -293,28 +305,21 @@
             const savedSelectedRows = localStorage.getItem('yardDeliverySelectedRows');
             const savedDeliveryType = localStorage.getItem('yardDeliveryType');
             
-            // Chỉ khôi phục nếu có trạng thái đã lưu
-            if (savedState) {
-                // Khôi phục thông tin sản phẩm
-                if (savedProductName && savedProductId) {
-                    selectedProductType = savedProductName;
-                    selectedProductId = savedProductId;
-                    
-                    // Hiển thị tên loại hàng
-                    $('#selected-product-name').text(savedProductName);
-                    $('#internal-product-name').text(savedProductName);
-                    $('#scale-product-name').text(savedProductName);
-                    
-                    // Chọn giá trị category_id tương ứng
-                    $('#category_id').val(savedProductId);
-                }
+            if (savedState && savedProductName && savedProductId) {
+                // Khôi phục thông tin loại mặt hàng
+                selectedProductType = savedProductName;
+                selectedProductId = savedProductId;
                 
-                // Khôi phục loại xuất hàng nếu có
+                // Đánh dấu loại mặt hàng đã chọn
+                $('#selected-product-name').text(savedProductName);
+                $('#internal-product-name').text(savedProductName);
+                $('#scale-product-name').text(savedProductName);
+                
+                // Cài đặt loại delivery nếu có
                 if (savedDeliveryType) {
                     selectedDeliveryType = savedDeliveryType;
                     $('#delivery_type').val(savedDeliveryType);
                     
-                    // Hiển thị tên loại xuất hàng
                     if (savedDeliveryType === 'internal') {
                         $('#delivery-type-display').text('Xuất nội bộ');
                     } else if (savedDeliveryType === 'sale') {
@@ -322,49 +327,77 @@
                     }
                 }
                 
-                // Ẩn tất cả các section
+                // Ẩn màn hình chọn loại mặt hàng
                 $('#product-type-selection').hide();
-                $('#delivery-type-selection').hide();
-                $('#internal-delivery-method').hide();
-                $('#scale-list-section').hide();
-                $('#truck-list-section').hide();
-                $('#delivery-form-section').hide();
                 
-                // Hiển thị section theo trạng thái đã lưu
+                // Chọn giá trị category_id tương ứng
+                $('#category_id').val(savedProductId);
+                
+                // Khôi phục trạng thái theo loại
                 if (savedState === 'scale-list') {
-                    selectedMethod = 'scale';
-                    $('#selected_method').val('scale');
+                    // Ẩn màn hình chọn loại xuất hàng
+                    $('#delivery-type-selection').hide();
+                    
+                    // Ẩn màn hình chọn phương thức xuất nội bộ
+                    $('#internal-delivery-method').hide();
+                    
+                    // Hiển thị danh sách phiếu cân
                     $('#scale-list-section').show();
                     
-                    // Lọc danh sách phiếu cân theo loại hàng
-                    filterScalesByProductType(selectedProductType);
+                    // Đánh dấu selected method
+                    selectedMethod = 'scale';
+                    $('#selected_method').val('scale');
                     
-                    // Khôi phục các hàng đã chọn
-                    if (savedSelectedRows) {
-                        try {
-                            const parsedRows = JSON.parse(savedSelectedRows);
-                            selectedRows = parsedRows;
-                            
-                            // Đánh dấu các hàng đã chọn
-                            parsedRows.forEach(function(row) {
-                                const $row = $(`[data-id="${row.id}"]`);
-                                if ($row.length) {
-                                    $row.addClass('selected');
-                                }
-                            });
-                        } catch (e) {
-                            console.error('Error parsing saved rows:', e);
-                        }
-                    }
+                    // Lọc danh sách phiếu cân
+                    setTimeout(function() {
+                        filterScalesByProductType(savedProductName);
+                        
+                        // Khôi phục dòng đã chọn
+                        const savedRows = JSON.parse(localStorage.getItem('yardDeliverySelectedRows') || '[]');
+                        savedRows.forEach(function(rowData) {
+                            const $row = $(`#${rowData.id}`);
+                            if ($row.length) {
+                                $row.addClass('selected');
+                                selectedRows.push(rowData);
+                            }
+                        });
+                    }, 100);
+                    
+                    // Xóa trạng thái lưu để tránh lặp lại
+                    clearSavedState();
+                    
+                } else if (savedState === 'truck-list') {
+                    // Ẩn màn hình chọn loại xuất hàng
+                    $('#delivery-type-selection').hide();
+                    
+                    // Ẩn màn hình chọn phương thức xuất nội bộ
+                    $('#internal-delivery-method').hide();
+                    
+                    // Hiển thị danh sách xe tải
+                    $('#truck-list-section').show();
+                    
+                    // Đánh dấu selected method
+                    selectedMethod = 'truck';
+                    $('#selected_method').val('truck');
+                    
+                    // Lọc danh sách xe tải
+                    setTimeout(function() {
+                        filterTrucksByCategory(savedProductId);
+                    }, 100);
+                    
+                    // Xóa trạng thái lưu để tránh lặp lại
+                    clearSavedState();
                 }
-                
-                // Xóa trạng thái đã lưu
-                localStorage.removeItem('yardDeliveryState');
-                localStorage.removeItem('yardDeliveryProductName');
-                localStorage.removeItem('yardDeliveryProductId');
-                localStorage.removeItem('yardDeliverySelectedRows');
-                localStorage.removeItem('yardDeliveryType');
             }
+        }
+        
+        // Hàm xóa trạng thái đã lưu
+        function clearSavedState() {
+            localStorage.removeItem('yardDeliveryState');
+            localStorage.removeItem('yardDeliveryProductName');
+            localStorage.removeItem('yardDeliveryProductId');
+            localStorage.removeItem('yardDeliveryType');
+            localStorage.removeItem('yardDeliverySelectedRows');
         }
         
         // Nếu chỉ có một loại mặt hàng, tự động chọn và bỏ qua bước chọn loại mặt hàng
@@ -521,6 +554,23 @@
             $('#internal-delivery-method').show();
         });
         
+        // Hàm focus vào input đầu tiên không bị vô hiệu hóa trong form
+        function focusFirstInput() {
+            setTimeout(function() {
+                // Tìm input đầu tiên không bị disabled hoặc readonly
+                const $firstInput = $('#delivery-form-section').find('input:not([readonly])').first();
+                
+                if ($firstInput.length) {
+                    $firstInput.focus();
+                    
+                    // Nếu là select, mở dropdown
+                    if ($firstInput.is('select')) {
+                        $firstInput.trigger('click');
+                    }
+                }
+            }, 100); // Delay nhỏ để đảm bảo DOM đã được cập nhật
+        }
+        
         // Event handler cho nút "Bán trực tiếp"
         $('#btn-direct-sale').on('click', function() {
             selectedDeliveryType = 'sale';
@@ -548,6 +598,9 @@
             
             // Kiểm tra và khóa trường biển số xe nếu cần
             lockVehicleNumberField();
+            
+            // Focus vào input đầu tiên
+            focusFirstInput();
         });
         
         // Event handler cho nút "Chọn phiếu cân"
@@ -602,6 +655,9 @@
             
             // Kiểm tra và khóa trường biển số xe nếu cần
             lockVehicleNumberField();
+            
+            // Focus vào input đầu tiên
+            focusFirstInput();
         });
         
         // Event handler cho các nút xe tải
@@ -636,6 +692,9 @@
             
             // Khóa trường biển số xe vì đã có dữ liệu
             lockVehicleNumberField();
+            
+            // Focus vào input đầu tiên
+            focusFirstInput();
         });
         
         // Event handlers cho các nút quay lại
@@ -906,11 +965,17 @@
                 
                 // Cập nhật danh sách id đã chọn để gửi lên server
                 $('#selected_items').val(selectedRows.map(item => item.id).join(','));
+                
+                // Cập nhật tổng tiền
+                updateTotalAmount();
             } else {
                 $('#vehicle_number').val('');
                 $('#quantity').val('');
                 $('#unit_price').val('');
                 $('#selected_items').val('');
+                
+                // Cập nhật tổng tiền
+                updateTotalAmount();
             }
         }
         
@@ -932,6 +997,9 @@
                 
                 // Khóa trường biển số xe nếu đã có dữ liệu
                 lockVehicleNumberField();
+                
+                // Focus vào input đầu tiên
+                focusFirstInput();
             } else {
                 // Hiển thị thông báo nếu không có dòng nào được chọn
                 alert('Vui lòng chọn ít nhất một phiếu cân.');
@@ -1045,9 +1113,38 @@
             if (yardId && yardCurrencies[yardId] && yardCurrencies[yardId].length > 1) {
                 $('#currency_container').show();
                 $('#currency_id').prop('required', true);
+                
+                // Cập nhật ký hiệu tiền tệ theo loại tiền tệ đã chọn
+                const $selectedOption = $('#currency_id').find('option:selected');
+                if ($selectedOption.length) {
+                    const text = $selectedOption.text();
+                    const matches = text.match(/\(([^)]+)\)/);
+                    if (matches && matches[1]) {
+                        currentCurrencySymbol = matches[1];
+                        updateTotalAmount();
+                    }
+                }
             } else {
                 $('#currency_container').hide();
                 $('#currency_id').prop('required', false);
+                
+                // Nếu bãi chỉ có một loại tiền tệ, lấy ký hiệu từ dữ liệu bãi
+                if (yardId && yardCurrencies[yardId] && yardCurrencies[yardId].length === 1) {
+                    const currencyId = yardCurrencies[yardId][0];
+                    // Tìm thông tin tiền tệ trong danh sách các tùy chọn
+                    $('#currency_id option').each(function() {
+                        //
+                        if ($(this).val() == currencyId) {
+                            const text = $(this).text();
+                            const matches = text.match(/\(([^)]+)\)/);
+                            if (matches && matches[1]) {
+                                currentCurrencySymbol = matches[1];
+                                updateTotalAmount();
+                            }
+                            return false; // break each loop
+                        }
+                    });
+                }
             }
         }
         
@@ -1183,5 +1280,70 @@
                 }
             }
         }
+        
+        // Hàm tính và cập nhật tổng tiền
+        function updateTotalAmount() {
+            // note
+            const quantity = parseFloat($('#quantity').val()) || 0;
+            const unitPrice = parseFloat($('#unit_price').val()) || 0;
+            const totalAmount = quantity * unitPrice;
+            
+            // Hiển thị tổng tiền với định dạng số của Việt Nam
+            $('#total_amount').text(formatCurrency(totalAmount));
+        }
+        
+        // Hàm định dạng số kiểu Việt Nam
+        function formatCurrency(amount) {
+            return amount.toLocaleString('vi-VN') + ' ' + currentCurrencySymbol;
+        }
+        
+        // Cập nhật ký hiệu tiền tệ khi thay đổi loại tiền tệ
+        $('#currency_id').on('change', function() {
+            const $selectedOption = $(this).find('option:selected');
+            if ($selectedOption.length) {
+                const text = $selectedOption.text();
+                const matches = text.match(/\(([^)]+)\)/);
+                if (matches && matches[1]) {
+                    currentCurrencySymbol = matches[1];
+                }
+            }
+            updateTotalAmount();
+        });
+        
+        // Khởi tạo ký hiệu tiền tệ khi trang tải
+        (function initDefaultCurrency() {
+            const $selectedOption = $('#currency_id').find('option:selected');
+            if ($selectedOption.length) {
+                const text = $selectedOption.text();
+                const matches = text.match(/\(([^)]+)\)/);
+                if (matches && matches[1]) {
+                    currentCurrencySymbol = matches[1];
+                }
+            }
+        })();
+        
+        // Theo dõi sự thay đổi của khối lượng và đơn giá để cập nhật tổng tiền
+        $('#quantity, #unit_price').on('input change', function() {
+            updateTotalAmount();
+        });
+        
+        // Cập nhật tổng tiền khi trang tải xong
+        updateTotalAmount();
+        
+        // Event handler cho nút làm mới danh sách xe tải
+        $('#btn-truck-refresh').on('click', function() {
+            // Lưu trạng thái hiện tại
+            localStorage.setItem('yardDeliveryState', 'truck-list');
+            localStorage.setItem('yardDeliveryProductName', selectedProductType);
+            localStorage.setItem('yardDeliveryProductId', selectedProductId);
+            
+            // Lưu trạng thái lựa chọn loại xuất hàng
+            if (selectedDeliveryType) {
+                localStorage.setItem('yardDeliveryType', selectedDeliveryType);
+            }
+            
+            // Reload trang
+            window.location.reload();
+        });
     });
 </script> 

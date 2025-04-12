@@ -148,6 +148,14 @@
                                 <input type="number" id="unit_price" name="unit_price" class="form-control" step="1" required>
                             </div>
                             
+                            <!-- Hiển thị tổng tiền -->
+                            <div class="form-group mb-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <label class="form-label">Tổng tiền:</label>
+                                    <span id="total_amount" class="fs-5 fw-bold">0</span>
+                                </div>
+                            </div>
+                            
                             <!-- Danh sách ID đã chọn -->
                             <input type="hidden" id="selected_items" name="selected_items" value="">
                         </div>
@@ -178,6 +186,9 @@
         
         // Kiểm tra nếu chỉ có một loại mặt hàng
         const singleProductCategory = '{single_product_category}' === 'true';
+        
+        // Biến lưu trữ ký hiệu tiền tệ hiện tại
+        let currentCurrencySymbol = 'VNĐ';
         
         if (savedState === 'receipt-list' && savedProductName) {
             // Khôi phục trạng thái trước đó
@@ -294,6 +305,9 @@
             $('#vehicle_number').val('');
             $('#quantity').val('');
             $('#unit_price').val('');
+            
+            // Focus vào input đầu tiên
+            focusFirstInput();
         });
         
         // Event handler cho nút chọn tất cả
@@ -404,6 +418,9 @@
             $('#category_id').parent('.form-group').addClass('opacity-75');
             $('#category_id').next('small.form-text').remove();
             $('#category_id').after('<small class="form-text text-muted">Loại hàng được xác định từ phiếu cân đã chọn</small>');
+            
+            // Focus vào input đầu tiên
+            focusFirstInput();
         });
         
         $('#btn-back-to-list').on('click', function() {
@@ -437,9 +454,38 @@
             if (yardId && yardCurrencies[yardId] && yardCurrencies[yardId].length > 1) {
                 $('#currency_container').show();
                 $('#currency_id').prop('required', true);
+                
+                // Cập nhật ký hiệu tiền tệ theo loại tiền tệ đã chọn
+                const $selectedOption = $('#currency_id').find('option:selected');
+                if ($selectedOption.length) {
+                    const text = $selectedOption.text();
+                    const matches = text.match(/\(([^)]+)\)/);
+                    if (matches && matches[1]) {
+                        currentCurrencySymbol = matches[1];
+                        updateTotalAmount();
+                    }
+                }
             } else {
                 $('#currency_container').hide();
                 $('#currency_id').prop('required', false);
+                
+                // Nếu bãi chỉ có một loại tiền tệ, lấy ký hiệu từ dữ liệu bãi
+                if (yardId && yardCurrencies[yardId] && yardCurrencies[yardId].length === 1) {
+                    const currencyId = yardCurrencies[yardId][0];
+                    // Tìm thông tin tiền tệ trong danh sách các tùy chọn
+                    $('#currency_id option').each(function() {
+                        //
+                        if ($(this).val() == currencyId) {
+                            const text = $(this).text();
+                            const matches = text.match(/\(([^)]+)\)/);
+                            if (matches && matches[1]) {
+                                currentCurrencySymbol = matches[1];
+                                updateTotalAmount();
+                            }
+                            return false; // break each loop
+                        }
+                    });
+                }
             }
         }
         
@@ -577,6 +623,9 @@
             
             // Cập nhật trường biển số xe
             $('#vehicle_number').val(vehicleNumber);
+            
+            // Cập nhật tổng tiền
+            $('#total_amount').text(formatCurrency(totalValue));
         }
         
         // Reset form và các lựa chọn
@@ -604,6 +653,9 @@
             
             // Ẩn dropdown currency nếu đang hiển thị
             $('#currency_container').hide();
+            
+            // Cập nhật tổng tiền
+            $('#total_amount').text(formatCurrency(0));
         }
         
         // Xử lý form submit
@@ -693,5 +745,70 @@
         
         // Khi trang tải xong, chọn giá trị đầu tiên cho các dropdown
         selectFirstOptions();
+        
+        // Hàm tính và cập nhật tổng tiền
+        function updateTotalAmount() {
+            const quantity = parseFloat($('#quantity').val()) || 0;
+            const unitPrice = parseFloat($('#unit_price').val()) || 0;
+            const totalAmount = quantity * unitPrice;
+            
+            // Hiển thị tổng tiền với định dạng số của Việt Nam
+            $('#total_amount').text(formatCurrency(totalAmount));
+        }
+        
+        // Hàm định dạng số kiểu Việt Nam
+        function formatCurrency(amount) {
+            return amount.toLocaleString('vi-VN') + ' ' + currentCurrencySymbol;
+        }
+        
+        // Cập nhật ký hiệu tiền tệ khi thay đổi loại tiền tệ
+        $('#currency_id').on('change', function() {
+            const $selectedOption = $(this).find('option:selected');
+            if ($selectedOption.length) {
+                const text = $selectedOption.text();
+                const matches = text.match(/\(([^)]+)\)/);
+                if (matches && matches[1]) {
+                    currentCurrencySymbol = matches[1];
+                }
+            }
+            updateTotalAmount();
+        });
+        
+        // Khởi tạo ký hiệu tiền tệ khi trang tải
+        (function initDefaultCurrency() {
+            const $selectedOption = $('#currency_id').find('option:selected');
+            if ($selectedOption.length) {
+                const text = $selectedOption.text();
+                const matches = text.match(/\(([^)]+)\)/);
+                if (matches && matches[1]) {
+                    currentCurrencySymbol = matches[1];
+                }
+            }
+        })();
+        
+        // Theo dõi sự thay đổi của khối lượng và đơn giá để cập nhật tổng tiền
+        $('#quantity, #unit_price').on('input change', function() {
+            updateTotalAmount();
+        });
+        
+        // Cập nhật tổng tiền khi trang tải xong
+        updateTotalAmount();
+        
+        // Hàm focus vào input đầu tiên không bị vô hiệu hóa trong form
+        function focusFirstInput() {
+            setTimeout(function() {
+                // Tìm input đầu tiên không bị disabled hoặc readonly
+                const $firstInput = $('#receipt-form-section').find('input:not([readonly])').first();
+                
+                if ($firstInput.length) {
+                    $firstInput.focus();
+                    
+                    // Nếu là select, mở dropdown
+                    if ($firstInput.is('select')) {
+                        $firstInput.trigger('click');
+                    }
+                }
+            }, 100); // Delay nhỏ để đảm bảo DOM đã được cập nhật
+        }
     });
 </script> 
