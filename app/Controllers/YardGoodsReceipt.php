@@ -83,8 +83,23 @@ class YardGoodsReceipt extends BaseController
         $noDataMessage = empty($canData) ? [['message' => 'Không có dữ liệu phiếu cân NK trong ngày hôm nay.']] : [];
         $this->assign('no_data_message', $noDataMessage);
         
-        // Lấy danh sách loại mặt hàng
-        $products = $this->productCategoryModel->findAll();
+        // Lấy danh sách loại mặt hàng từ purchase_yard_product_info join với product_categories
+        // Chỉ lấy các loại mặt hàng được gắn với bãi
+        $products = $this->purchaseYardProductInfoModel->getProductCategoriesByYardIds($yardIds);
+        
+        // Kiểm tra số lượng loại mặt hàng
+        $singleProductCategory = (count($products) === 1);
+        $this->assign('single_product_category', $singleProductCategory ? 'true' : 'false');
+        if ($singleProductCategory && !empty($products)) {
+            // Tách các giá trị thành các biến riêng biệt thay vì gán cả array
+            $this->assign('auto_selected_category_id', $products[0]['id']);
+            $this->assign('auto_selected_category_name', $products[0]['name']);
+            $this->assign('auto_selected_category_abbreviation', $products[0]['abbreviation']);
+        } else {
+            $this->assign('auto_selected_category_id', '');
+            $this->assign('auto_selected_category_name', '');
+            $this->assign('auto_selected_category_abbreviation', '');
+        }
         
         // Lấy danh sách loại tiền tệ từ purchase_yard_product_info
         $currencies = [];

@@ -48,4 +48,25 @@ class PurchaseYardProductInfoModel extends BaseModel
         
         return $this->findAll();
     }
+    
+    /**
+     * Lấy danh sách loại mặt hàng theo các bãi được phân quyền
+     *
+     * @param array $yardIds Danh sách ID của bãi
+     * @return array
+     */
+    public function getProductCategoriesByYardIds($yardIds)
+    {
+        if (empty($yardIds)) {
+            return [];
+        }
+        
+        $this->select('product_categories.id, product_categories.name, product_categories.abbreviation, COUNT(DISTINCT purchase_yard_product_info.purchase_yard_id) as yard_count');
+        $this->join('product_categories', 'product_categories.id = purchase_yard_product_info.category_id');
+        $this->whereIn('purchase_yard_product_info.purchase_yard_id', $yardIds);
+        $this->groupBy('product_categories.id, product_categories.name, product_categories.abbreviation');
+        $this->orderBy('product_categories.name', 'ASC');
+        
+        return $this->findAll();
+    }
 } 

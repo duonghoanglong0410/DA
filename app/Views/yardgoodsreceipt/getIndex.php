@@ -176,6 +176,9 @@
         const savedProductName = localStorage.getItem('yardReceiptProductName');
         const savedProductId = localStorage.getItem('yardReceiptProductId');
         
+        // Kiểm tra nếu chỉ có một loại mặt hàng
+        const singleProductCategory = '{single_product_category}' === 'true';
+        
         if (savedState === 'receipt-list' && savedProductName) {
             // Khôi phục trạng thái trước đó
             receiptMode = 'byVehicle';
@@ -203,13 +206,35 @@
         }
         
         // Dữ liệu về loại tiền tệ của các bãi
-        const yardCurrencies = {yard_currencies_json};
+        const yardCurrencies = JSON.parse('{!yard_currencies_json!}');
         
         // Event handlers cho các nút chọn kiểu lập phiếu
         $('#btn-receipt-by-vehicle').on('click', function() {
             receiptMode = 'byVehicle';
             $('#option-buttons').hide();
-            $('#product-type-selection').show();
+            
+            // Nếu chỉ có một loại mặt hàng, tự động chọn và bỏ qua bước chọn loại mặt hàng
+            if (singleProductCategory) {
+                // Lấy thông tin loại mặt hàng duy nhất
+                const productName = '{auto_selected_category_name}';
+                const productId = '{auto_selected_category_id}';
+                
+                // Thiết lập loại hàng đã chọn
+                filteredProductName = productName;
+                $('#selected-product-type').text(productName);
+                
+                // Hiển thị danh sách phiếu cân
+                $('#receipt-list-section').show();
+                
+                // Lọc danh sách phiếu cân theo loại hàng
+                filterReceiptsByProductType(productName);
+                
+                // Chọn giá trị category_id tương ứng
+                $('#category_id').val(productId);
+            } else {
+                // Hiển thị bước chọn loại mặt hàng nếu có nhiều loại
+                $('#product-type-selection').show();
+            }
         });
         
         // Event handler cho nút quay lại từ màn hình chọn loại hàng
@@ -348,7 +373,16 @@
         // Event handlers cho các nút điều hướng
         $('#btn-back').on('click', function() {
             $('#receipt-list-section').hide();
-            $('#product-type-selection').show();
+            
+            // Nếu chỉ có một loại mặt hàng, quay lại màn hình chọn kiểu lập phiếu
+            // thay vì màn hình chọn loại mặt hàng
+            if (singleProductCategory) {
+                $('#option-buttons').show();
+            } else {
+                // Nếu có nhiều loại mặt hàng, quay lại màn hình chọn loại mặt hàng
+                $('#product-type-selection').show();
+            }
+            
             resetForm();
         });
         
