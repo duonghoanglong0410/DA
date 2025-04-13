@@ -40,6 +40,15 @@ class User extends BaseController
         $user = $this->userModel->authenticate($username, $password, $remember_token);
         if ($user) {
             $this->session->set('userId', $user['id']);
+            
+            // Kiểm tra nếu có URL chuyển hướng được lưu trong session
+            $redirectURL = $this->session->get('redirect_url');
+            if ($redirectURL) {
+                // Xóa URL chuyển hướng khỏi session sau khi sử dụng
+                $this->session->remove('redirect_url');
+                return redirect()->to($redirectURL);
+            }
+            
             return redirect()->to('/');
         } else {
             $this->session->setFlashdata('error', 'Thông tin đăng nhập không chính xác.');
@@ -121,7 +130,7 @@ class User extends BaseController
     {
         if ($id === null) {
             $id = $this->session->userId;
-        } else {
+    } else {
             if ($id != $this->session->userId) {
                 if (!$this->userModel->hasRole($this->session->userId, Roles::SYSTEM_MANAGER)) {
                     $this->session->setFlashdata('error', 'Bạn không có quyền chỉnh sửa thông tin của người khác.');

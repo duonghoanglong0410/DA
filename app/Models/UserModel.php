@@ -57,9 +57,10 @@ class UserModel extends BaseModel
         if (isset($data['data']['password'])) {
             $data['data']['password'] = $this->hashAString($data['data']['password']);
         }
-        if (!empty($data['data']['remember_token'])) {
-            $data['data']['remember_token'] = $this->hashAString($data['data']['remember_token']);
-        }
+        
+        // Không hash remember_token vì chúng ta cần giữ nguyên giá trị để so sánh với cookie
+        // Đã loại bỏ việc hash token để đơn giản hóa quá trình xác thực
+        
         return $data;
     }
 
@@ -70,16 +71,27 @@ class UserModel extends BaseModel
             return false;
         }
         if (!password_verify($password, base64_decode($user['password']))) {
-
             return false;
         }
         if ($remember_token) {
-            // $hashedToken = $this->hashAString($remember_token);
+            // Lưu token gốc vào database không hash
             $this->update($user['id'], ['remember_token' => $remember_token]);
-            helper('cookie');
-            // Lưu token gốc vào cookie cho 30 ngày
-            set_cookie('remember_token', $remember_token, 86400 * 30);
-            // $user['remember_token'] = $hashedToken;
+            
+            // Sử dụng setcookie() trực tiếp của PHP thay vì helper của CodeIgniter
+            $expire = time() + 86400 * 30; // 30 ngày
+            setcookie(
+                'remember_token',
+                $remember_token,
+                [
+                    'expires' => $expire,
+                    'path' => '/',
+                    'domain' => '',
+                    'secure' => false,
+                    'httponly' => true,
+                    'samesite' => 'Lax'
+                ]
+            );
+            
         }
         return $user;
     }
@@ -92,15 +104,19 @@ class UserModel extends BaseModel
      */
     public function authenticateByRememberToken()
     {
-        helper('cookie');
-        $remember_token = get_cookie('remember_token');
+        // Sử dụng $_COOKIE trực tiếp thay vì helper
+        $remember_token = isset($_COOKIE['remember_token']) ? $_COOKIE['remember_token'] : null;
+        
         if (!$remember_token) {
             return false;
         }
-        $user = $this->findOneByRemember_token($remember_token);
-        if ($user && password_verify($remember_token, $user['remember_token'])) {
+        
+        // Tìm user với token chưa qua hash
+        $user = $this->where('remember_token', $remember_token)->first();
+        if ($user) {
             return $user;
         }
+        
         return false;
     }
 
@@ -113,8 +129,18 @@ class UserModel extends BaseModel
     public function logout($userId)
     {
         $result = $this->update($userId, ['remember_token' => null]);
-        helper('cookie');
-        delete_cookie('remember_token');
+        
+        // Xóa cookie bằng hàm setcookie() trực tiếp của PHP
+        setcookie('remember_token', '', [
+            'expires' => time() - 3600,
+            'path' => '/',
+            'domain' => '',
+            'secure' => false,
+            'httponly' => true,
+            'samesite' => 'Lax'
+        ]);
+        
+        
         return $result;
     }
 

@@ -103,19 +103,28 @@ abstract class BaseController extends Controller
         $this->assign('site_title', SettingsModel::getInstance()->getByKey('site_title', "ATVN"));
 
         if (empty($this->session->userId)) {
+            // Thêm logging để debug
             $user = $this->userModel->authenticateByRememberToken(); //Tự động đăng nhập bằng remember token nếu có
-
-            if (empty($user)) {
+            
+            if (!empty($user)) {
+                // Đăng nhập thành công bằng remember token
+                $this->session->userId = $user['id'];
+            } 
+            else {
                 //Nếu không tự động đăng nhập được, và nếu user đang vào các trang đăng nhập, báo lỗi thì cho phép
                 if ($controller == 'user' && ($method == 'getLogin' || $method == 'postAuthencation' || $method == 'getError')) {
                     return;
                 }
                 //nếu không thì đá về trang login
+                // Lưu URL hiện tại vào session để quay lại sau khi đăng nhập
+                $currentURL = current_url();
+                // Không lưu URL trang login hoặc auth
+                if (strpos($currentURL, 'user/login') === false && strpos($currentURL, 'user/authencation') === false) {
+                    $this->session->set('redirect_url', $currentURL);
+                }
                 header('Location: ' . site_url("/user/login"));
                 exit;
             }
-
-            $this->session->userId = $user['id'];
         } else {
             //Nếu user đã đăng nhập thì lấy thông tin user 
             $user = $this->userModel->find($this->session->userId);
