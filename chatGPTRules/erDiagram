@@ -304,6 +304,8 @@ erDiagram
         int created_by "FK: USERS.id"
         decimal old_stock "Tồn kho cũ"
         decimal new_stock "Tồn kho mới"
+        decimal old_average_price "Đơn giá bình quân cũ"
+        decimal new_average_price "Đơn giá bình quân mới"
         datetime created_at "Thời gian tạo"
         datetime updated_at "Thời gian cập nhật"
     }
@@ -429,6 +431,7 @@ erDiagram
         datetime created_at "Thời gian tạo bản ghi"
         datetime updated_at "Thời gian cập nhật bản ghi"
     }
+
 
     %% Relationships
     BUYER_CURRENCY_FUNDS ||--o{ BUYERS : "buyer_id"

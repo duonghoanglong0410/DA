@@ -8,8 +8,36 @@
         background-color: #fff;
     }
 
+    .mobile-row {
+        display: none;
+    }
+    .desktop-row {
+        display: table-row;
+    }
+
+    .mobile-cell {
+        display: none;
+    }
+    .desktop-cell {
+        display: table-cell;
+    }
 }
 
+@media (max-width: 767px) {
+    .mobile-row {
+        display: table-row;
+        border-bottom: 2px solid rgba(0, 0, 0, 0.4) !important
+    }
+    .desktop-row {
+        display: none;
+    }
+    .mobile-cell {
+        display: table-cell;
+    }
+    .desktop-cell {
+        display: none;
+    }
+}
 
 .text-end {
     text-align: right !important;

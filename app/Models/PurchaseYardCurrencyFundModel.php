@@ -18,12 +18,21 @@ class PurchaseYardCurrencyFundModel extends BaseModel
 
     // Lấy danh sách quỹ tiền của kho bãi theo purchase_yard_id
     public function getFundCurrencies($yardId)
-    {
+    {        
         $builder = $this->db->table($this->table . ' as pycf');
-        $builder->select('pycf.*, c.name as currency_name, c.abbreviation, c.symbol');
+        $builder->select('pycf.*, py.yard_name, py.yard_code, c.name as currency_name, c.abbreviation, c.symbol');
         $builder->join('currencies as c', 'c.id = pycf.currency_id', 'left');
-        $builder->where('pycf.yard_id', $yardId);
-        return $builder->get()->getResultArray();
+        $builder->join('purchase_yards as py', 'py.id = pycf.purchase_yard_id', 'left');
+        if (is_array($yardId)) {
+            $builder->whereIn('pycf.purchase_yard_id', $yardId);
+        } else {
+            $builder->where('pycf.purchase_yard_id', $yardId);
+        }
+        $data = $builder->get()->getResultArray();
+        foreach ($data as &$row) {
+            $row['balance_formatted'] = number_format($row['balance'], 0, '.', ',');
+        }
+        return $data;
     }
     
     /**

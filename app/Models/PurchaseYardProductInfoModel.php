@@ -42,11 +42,21 @@ class PurchaseYardProductInfoModel extends BaseModel
             return [];
         }
         
-        $this->select('purchase_yard_product_info.*, currencies.name as currency_name, currencies.symbol');
+        $this->select('purchase_yard_product_info.*, pc.name as category_name, py.yard_name, py.yard_code, currencies.name as currency_name, currencies.symbol');
         $this->join('currencies', 'currencies.id = purchase_yard_product_info.currency_id', 'left');
+        $this->join('purchase_yards as py', 'py.id = purchase_yard_product_info.purchase_yard_id', 'left');
+        $this->join('product_categories as pc', 'pc.id = purchase_yard_product_info.category_id', 'left');
         $this->whereIn('purchase_yard_id', $yardIds);
         
-        return $this->findAll();
+        $data = $this->findAll();
+
+        foreach ($data as &$row) {
+            $row['stock_weight_formatted'] = number_format($row['stock_weight'], 0, '.', ',');
+            $row['average_price_formatted'] = number_format($row['average_price'], 0, '.', ',');
+            $row['stock_value_formatted'] = number_format($row['stock_weight'] * $row['average_price'], 0, '.', ',');
+        }
+
+        return $data;
     }
     
     /**

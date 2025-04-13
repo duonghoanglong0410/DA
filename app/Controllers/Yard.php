@@ -4,6 +4,9 @@ use App\Controllers\BaseController;
 use App\Models\PurchaseYardModel;
 use App\Models\PurchaseYardCurrencyFundModel;
 use App\Models\CurrencyModel;
+use App\Models\PurchaseYardProductInfoModel;
+use App\Models\UserRoleAssignmentModel;
+use App\Models\ProductCategoryModel;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Psr\Log\LoggerInterface;
@@ -13,6 +16,9 @@ class Yard extends BaseController
     protected $purchaseYardModel;
     protected $purchaseYardCurrencyFundModel;
     protected $currencyModel;
+    protected $userRoleAssignmentModel;
+    protected $purchaseYardProductInfoModel;
+    protected $productCategoryModel;
 
     // Sử dụng initController của CodeIgniter 4 thay vì __construct()
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
@@ -21,6 +27,9 @@ class Yard extends BaseController
         $this->purchaseYardModel             = new PurchaseYardModel();
         $this->purchaseYardCurrencyFundModel = new PurchaseYardCurrencyFundModel();
         $this->currencyModel                 = new CurrencyModel();
+        $this->userRoleAssignmentModel       = new UserRoleAssignmentModel();
+        $this->purchaseYardProductInfoModel  = new PurchaseYardProductInfoModel();
+        $this->productCategoryModel          = new ProductCategoryModel();
     }
 
     // Mỗi controller phải implement hàm isValidRole, trả về true mặc định
@@ -203,5 +212,154 @@ class Yard extends BaseController
         }
         $this->purchaseYardModel->delete($yard_id);
         return redirect()->to('yard');
+    }
+
+    /**
+     * Hiển thị form điều chỉnh tồn kho và giá bình quân
+     */
+    public function getStock($id)
+    {
+        // Kiểm tra quyền truy cập
+        $userId = $this->session->userId;
+        $authorizedYards = $this->userRoleAssignmentModel->getAuthorizedYardsByUserId($userId);
+        
+        if (!$authorizedYards) {
+            return redirect()->to('yard/dashboard')->with('error', 'Bạn không có quyền truy cập vào kho bãi này.');
+        }
+
+        // Lấy thông tin tồn kho
+        $productInfo = $this->purchaseYardProductInfoModel->find($id);
+        if (!$productInfo) {
+            return redirect()->to('yard/dashboard')->with('error', 'Không tìm thấy thông tin tồn kho.');
+        }
+
+        // Kiểm tra quyền truy cập kho bãi
+        $yardIds = array_column($authorizedYards, 'purchase_yard_id');
+        if (!in_array($productInfo['purchase_yard_id'], $yardIds)) {
+            return redirect()->to('yard/dashboard')->with('error', 'Bạn không có quyền truy cập vào kho bãi này.');
+        }
+
+        // Lấy thông tin bãi và loại sản phẩm
+        $yard = $this->purchaseYardModel->find($productInfo['purchase_yard_id']);
+        $category = $this->productCategoryModel->find($productInfo['category_id']);
+        $currency = $this->currencyModel->find($productInfo['currency_id']);
+
+        // Gán dữ liệu cho view
+        $this->assign('id', $id);
+        $this->assign('yard_name', $yard['yard_name']);
+        $this->assign('yard_code', $yard['yard_code']);
+        $this->assign('category_name', $category['name']);
+        $this->assign('currency_symbol', $currency['symbol']);
+        $this->assign('stock_weight', $productInfo['stock_weight']);
+        $this->assign('stock_weight_formatted', number_format($productInfo['stock_weight'], 0, ',', '.'));
+        $this->assign('average_price', $productInfo['average_price']);
+        $this->assign('average_price_formatted', number_format($productInfo['average_price'], 0, ',', '.'));
+
+        return $this->render();
+    }
+
+    /**
+     * Xử lý cập nhật tồn kho và giá bình quân
+     */
+    public function postStock($id)
+    {
+        // Kiểm tra quyền truy cập
+        $userId = $this->session->userId;
+        $authorizedYards = $this->userRoleAssignmentModel->getAuthorizedYardsByUserId($userId);
+        
+        if (!$authorizedYards) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Bạn không có quyền truy cập vào kho bãi này.'
+            ]);
+        }
+
+        // Lấy thông tin tồn kho
+        $productInfo = $this->purchaseYardProductInfoModel->find($id);
+        if (!$productInfo) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Không tìm thấy thông tin tồn kho.'
+            ]);
+        }
+
+        // Kiểm tra quyền truy cập kho bãi
+        $yardIds = array_column($authorizedYards, 'purchase_yard_id');
+        if (!in_array($productInfo['purchase_yard_id'], $yardIds)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Bạn không có quyền truy cập vào kho bãi này.'
+            ]);
+        }
+
+        // Lấy dữ liệu từ form
+        $newStockWeight = $this->request->getPost('stock_weight');
+        $newAveragePrice = $this->request->getPost('average_price');
+
+        // Validate dữ liệu
+        if (!is_numeric($newStockWeight) || !is_numeric($newAveragePrice)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Dữ liệu không hợp lệ.'
+            ]);
+        }
+
+        // Cập nhật thông tin
+        $updateData = [
+            'stock_weight' => $newStockWeight,
+            'average_price' => $newAveragePrice,
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        if (!$this->purchaseYardProductInfoModel->update($id, $updateData)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra khi cập nhật thông tin.'
+            ]);
+        }
+
+        // Create stock adjustment record
+        $stockAdjustmentModel = new \App\Models\StockAdjustmentModel();
+        $adjustmentData = [
+            'warehouse_id' => 0, // Not from warehouse
+            'purchase_yard_product_info_id' => $id,
+            'created_by' => $userId,
+            'old_stock' => $productInfo['stock_weight'],
+            'new_stock' => $newStockWeight,
+            'old_average_price' => $productInfo['average_price'],
+            'new_average_price' => $newAveragePrice,
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+        $stockAdjustmentModel->insert($adjustmentData);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Đã cập nhật thông tin thành công.'
+        ]);
+    }
+    
+    /**
+     * Hiển thị tổng quan kho bãi
+     */
+    public function getDashboard()
+    {
+        $allYardInfo = $this->userRoleAssignmentModel->getAuthorizedYardsByUserId($this->session->userId);
+
+        if (empty($allYardInfo)) {
+            return redirect()->to('/')->with('error', 'Bạn không có quyền truy cập vào bất kỳ kho bãi nào.');
+        }
+
+        $allYardByUserId = array_column($allYardInfo, 'purchase_yard_id');
+
+        $yardCurrencies = $this->purchaseYardCurrencyFundModel->getFundCurrencies($allYardByUserId);
+
+        $yardProducts = $this->purchaseYardProductInfoModel->getInfoByYardIds($allYardByUserId);
+
+        $this->assign('allYardInfo', $allYardInfo);
+        $this->assign('yardCurrencies', $yardCurrencies);
+        $this->assign('yardProducts', $yardProducts);
+
+        return $this->render();
     }
 }
