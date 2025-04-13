@@ -19,7 +19,7 @@ class TripModel extends BaseModel
         'purchase_yard_weighing_date',
         'factory_weighing_date',
         'factory_id',
-        'purchase_yard_currency_fund_id',
+        'buyer_currency_fund_id',
         'document_number',
         'sold_weight',
         'net_weight',
@@ -44,10 +44,10 @@ class TripModel extends BaseModel
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
         
-    // Đếm số bản ghi trong trips có purchase_yard_currency_fund_id bằng $fundId
+    // Đếm số bản ghi trong trips có buyer_currency_fund_id bằng $fundId
     public function countByCurrencyFundId($fundId)
     {
-        return $this->where('purchase_yard_currency_fund_id', $fundId)->countAllResults();
+        return $this->where('buyer_currency_fund_id', $fundId)->countAllResults();
     }
     
     /**
@@ -155,7 +155,7 @@ class TripModel extends BaseModel
             'purchase_yard_weighing_date' => date('Y-m-d'),
             'factory_weighing_date' => null,
             'factory_id' => 0,
-            'purchase_yard_currency_fund_id' => $currencyFundId,
+            'buyer_currency_fund_id' => $currencyFundId,
             'document_number' => '',
             'sold_weight' => 0,
             'net_weight' => 0,
@@ -239,10 +239,10 @@ class TripModel extends BaseModel
      * @param float $exportWeight Khối lượng xuất
      * @param float $exportUnitPrice Đơn giá xuất
      * @param int|null $warehouseId ID kho (nếu có)
-     * @param int|null $buyerCurrencyFundId ID quỹ tiền tệ người mua (nếu có)
+     * @param int|null $purchaseYardCurrencyFundId ID quỹ tiền tệ tại bãi (nếu có)
      * @return int|false ID của chi tiết đã tạo hoặc false nếu thất bại
      */
-    public function addTripDetail($tripId, $yardId, $userId, $exportWeight, $exportUnitPrice, $warehouseId = null, $buyerCurrencyFundId = null)
+    public function addTripDetail($tripId, $yardId, $userId, $exportWeight, $exportUnitPrice, $warehouseId = null, $purchaseYardCurrencyFundId = null)
     {
         $tripDetailModel = new \App\Models\TripDetailModel();
         
@@ -251,7 +251,7 @@ class TripModel extends BaseModel
             'purchase_yard_id' => $yardId,
             'created_by' => $userId,
             'warehouse_id' => $warehouseId ?: 0,
-            'buyer_currency_fund_id' => $buyerCurrencyFundId ?: 0,
+            'purchase_yard_currency_fund_id' => $purchaseYardCurrencyFundId ?: 0,
             'export_weight' => $exportWeight,
             'export_unit_price' => $exportUnitPrice,
             'export_total_amount' => $exportWeight * $exportUnitPrice,
@@ -392,5 +392,49 @@ class TripModel extends BaseModel
         $detailId = $this->addTripDetail($tripId, $yardId, $userId, $quantity, $unitPrice);
         
         return (bool) $detailId;
+    }
+    
+    /**
+     * Lấy danh sách phiếu xuất kho từ trip_details trong khoảng thời gian và thuộc các bãi được phân quyền
+     * Chỉ lấy những phiếu chưa thu tiền khách mua (remaining_goods_debt = total_goods_amount)
+     *
+     * @param string $startDate Ngày bắt đầu (Y-m-d)
+     * @param string $endDate Ngày kết thúc (Y-m-d)
+     * @param array $yardIds Danh sách ID của bãi được phân quyền
+     * @return array
+     */
+    public function getDeliveryDetailsWithinDateRange($startDate, $endDate, $yardIds)
+    {
+        if (empty($yardIds)) {
+            return [];
+        }
+        
+        $builder = $this->db->table('trip_details as td');
+        $builder->select('
+            td.id, td.trip_id, td.purchase_yard_id, td.export_weight as weight, td.export_unit_price as unit_price, td.created_at,
+            t.trip_code, t.vehicle_number, t.buyer_currency_fund_id, t.total_goods_amount, t.remaining_goods_debt,
+            py.yard_name, py.yard_code,
+            pc.name as category_name,
+            c.symbol as currency_symbol,
+            u.fullname as creator_name
+        ');
+        
+        $builder->join('trips as t', 't.id = td.trip_id');
+        $builder->join('purchase_yards as py', 'py.id = td.purchase_yard_id');
+        $builder->join('product_categories as pc', 'pc.id = t.category_id');
+        $builder->join('purchase_yard_currency_funds as tycf', 'tycf.id = td.purchase_yard_currency_fund_id', 'left');
+        $builder->join('currencies as c', 'c.id = tycf.currency_id', 'left');
+        $builder->join('users as u', 'u.id = td.created_by', 'left');
+        
+        // Lọc theo điều kiện
+        $builder->whereIn('td.purchase_yard_id', $yardIds);
+        $builder->where('t.remaining_goods_debt = t.total_goods_amount'); // Chưa thu tiền
+        $builder->where('td.created_at >=', $startDate . ' 00:00:00');
+        $builder->where('td.created_at <=', $endDate . ' 23:59:59');
+        
+        // Sắp xếp theo thời gian tạo giảm dần (mới nhất trước)
+        $builder->orderBy('td.created_at', 'DESC');
+        
+        return $builder->get()->getResultArray();
     }
 }

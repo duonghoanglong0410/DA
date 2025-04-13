@@ -5,13 +5,14 @@ use App\Models\BaseModel;
 class TripDetailModel extends BaseModel
 {
     protected $table      = 'trip_details';
+    protected $primaryKey = 'id';
     
     protected $allowedFields = [
+        'trip_id',
         'purchase_yard_id',
         'created_by',
-        'trip_id',
-        'buyer_currency_fund_id',
         'warehouse_id',
+        'purchase_yard_currency_fund_id',
         'export_weight',
         'export_unit_price',
         'export_total_amount',
@@ -29,7 +30,11 @@ class TripDetailModel extends BaseModel
         'created_at',
         'updated_at'
     ];
-        
+    
+    protected $useTimestamps = true;
+    protected $createdField  = 'created_at';
+    protected $updatedField  = 'updated_at';
+    
     /**
      * Lấy tổng khối lượng xuất của một chuyến xe
      * 
@@ -87,5 +92,37 @@ class TripDetailModel extends BaseModel
     public function getDetailsByTripId($tripId)
     {
         return $this->where('trip_id', $tripId)->findAll();
+    }
+    
+    /**
+     * Lấy thông tin chi tiết xuất kho theo ID
+     * 
+     * @param int $id ID của chi tiết xuất kho
+     * @return array|null Thông tin chi tiết xuất kho
+     */
+    public function getDeliveryDetailById($id)
+    {
+        $builder = $this->db->table($this->table . ' as td');
+        $builder->select('
+            td.id, td.trip_id, td.purchase_yard_id, td.export_weight, td.export_unit_price, 
+            td.export_total_amount, td.created_at, td.created_by,
+            py.yard_name, py.yard_code,
+            pc.name as category_name,
+            c.symbol as currency_symbol,
+            u.fullname as creator_name
+        ');
+        
+        $builder->join('trips as t', 't.id = td.trip_id');
+        $builder->join('purchase_yards as py', 'py.id = td.purchase_yard_id');
+        $builder->join('product_categories as pc', 'pc.id = t.category_id');
+        $builder->join('purchase_yard_currency_funds as pycf', 'pycf.id = td.purchase_yard_currency_fund_id', 'left');
+        $builder->join('currencies as c', 'c.id = pycf.currency_id', 'left');
+        $builder->join('users as u', 'u.id = td.created_by', 'left');
+        
+        $builder->where('td.id', $id);
+        
+        $result = $builder->get()->getRowArray();
+        
+        return $result;
     }
 } 

@@ -556,7 +556,9 @@ class YardGoodsReceipt extends BaseController
             $this->receiptAdjustmentModel->update($adjustmentId, [
                 'new_weight' => $newWeight,
                 'new_unit_price' => $newUnitPrice,
-                'updated_at' => date('Y-m-d H:i:s')
+                'updated_at' => date('Y-m-d H:i:s'),
+                'created_by' => $this->session->userId,
+                'reviewed_by' => 0
             ]);
             
             return $this->response->setJSON([
@@ -595,12 +597,7 @@ class YardGoodsReceipt extends BaseController
         $authorizedYards = $this->userRoleAssignmentModel->getAuthorizedYardsByUserId($userId);
         
         if (empty($authorizedYards)) {
-            $this->session->setFlashdata('error', 'Bạn không có quyền truy cập vào bất kỳ bãi nào.');
-            $this->assign('adjustments', []);
-            $this->assign('no_data_message', [['message' => 'Bạn không có quyền truy cập vào bất kỳ bãi nào.']]);
-            $this->assign('error_message', $this->session->getFlashdata('error'));
-            $this->assign('success_message', $this->session->getFlashdata('success'));
-            return $this->render();
+            return redirect()->to('yard-goods-receipt')->with('error', 'Bạn không có quyền truy cập vào bất kỳ bãi nào.');
         }
         
         // Lấy danh sách yard_id
@@ -612,11 +609,7 @@ class YardGoodsReceipt extends BaseController
         
         // Nếu không có phiếu điều chỉnh nào
         if (empty($adjustments)) {
-            $this->assign('adjustments', []);
-            $this->assign('no_data_message', [['message' => 'Không có phiếu điều chỉnh nào đang chờ duyệt.']]);
-            $this->assign('error_message', $this->session->getFlashdata('error'));
-            $this->assign('success_message', $this->session->getFlashdata('success'));
-            return $this->render();
+            return redirect()->to('yard-goods-receipt')->with('error', 'Không có phiếu điều chỉnh nào đang chờ duyệt.');
         }
         
         // Lấy thông tin về các dispatcher để kiểm tra quyền
