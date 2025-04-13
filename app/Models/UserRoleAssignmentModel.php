@@ -110,4 +110,18 @@ class UserRoleAssignmentModel extends BaseModel
         
         return $this->findAll();
     }
+
+    /**
+     * Lấy danh sách user có một vai trò cụ thể
+     *
+     * @param int $roleId ID của vai trò cần kiểm tra
+     * @return array Danh sách user_id có vai trò được chỉ định
+     */
+    public function getUsersWithRole($roleId)
+    {
+        $this->select('distinct(user_id) as user_id');
+        $this->where('role_id', $roleId);
+        
+        return $this->findAll();
+    }
 }

@@ -231,14 +231,12 @@ class CanTuDongModel extends BaseModel
             return false;
         }
         
-        // Ghi log để debug
-        log_message('debug', 'CanTuDongModel::markAsReceipted - Đánh dấu phiếu cân: ' . implode(', ', $validIds));
-        
         // Cập nhật trạng thái is_receipted của các phiếu cân
         $this->whereIn('id', $validIds);
         
         return $this->update(null, ['is_receipted' => 1]);
     }
+
 }
 
 

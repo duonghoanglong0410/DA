@@ -144,7 +144,7 @@
     </div>
     
     <!-- Form lập phiếu cân xuất -->
-    <div id="delivery-form-section" style="display: none;">
+    <div class="autofocus" id="delivery-form-section" style="display: none;">
         <form id="deliveryForm" method="post" action="{site_url}yard-goods-delivery/save">
             <div class="row justify-content-center">
                 <div class="col-12 col-md-8 col-lg-6">
@@ -554,22 +554,6 @@
             $('#internal-delivery-method').show();
         });
         
-        // Hàm focus vào input đầu tiên không bị vô hiệu hóa trong form
-        function focusFirstInput() {
-            setTimeout(function() {
-                // Tìm input đầu tiên không bị disabled hoặc readonly
-                const $firstInput = $('#delivery-form-section').find('input:not([readonly])').first();
-                
-                if ($firstInput.length) {
-                    $firstInput.focus();
-                    
-                    // Nếu là select, mở dropdown
-                    if ($firstInput.is('select')) {
-                        $firstInput.trigger('click');
-                    }
-                }
-            }, 100); // Delay nhỏ để đảm bảo DOM đã được cập nhật
-        }
         
         // Event handler cho nút "Bán trực tiếp"
         $('#btn-direct-sale').on('click', function() {

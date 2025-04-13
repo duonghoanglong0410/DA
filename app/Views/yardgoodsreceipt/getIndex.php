@@ -4,11 +4,13 @@
         <div class="col-12 col-md-8 col-lg-6">
             <div class="form-box">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Chọn kiểu lập phiếu</h5>
+                    <h5 class="mb-0">Chức năng nhập kho</h5>
                 </div>
                 <div class="card-body d-flex flex-column align-items-center">
                     <button id="btn-receipt-by-vehicle" class="btn btn-success w-75 py-4 mb-4 fs-5 btn-lg py-3">Lập phiếu theo xe</button>
                     <button id="btn-receipt-summary" class="btn btn-info w-75 py-4 fs-5 btn-lg py-3 mb-4">Lập phiếu tổng hợp</button>
+                    <a href="{site_url}yard-goods-receipt/history" class="btn btn-warning w-75 py-4 fs-5 btn-lg py-3 mb-4">Danh sách phiếu nhập</a>
+                    <a href="{site_url}yard-goods-receipt/adjustment" class="btn btn-primary w-75 py-4 fs-5 btn-lg py-3 mb-4">Danh sách phiếu điều chỉnh</a>
                     <button id="btn-cancel" class="btn btn-secondary w-75 py-4 fs-5 btn-lg py-3" onclick="history.back()">Quay lại</button>
                 </div>
             </div>

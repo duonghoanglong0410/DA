@@ -239,6 +239,7 @@ erDiagram
         int category_id "FK: PRODUCT_CATEGORIES.id"
         decimal weight "Khối lượng"
         decimal unit_price "Đơn giá"
+        int created_by "FK: USERS.id - Người tạo phiếu nhập hàng"
         datetime created_at "Thời gian tạo"
         datetime updated_at "Thời gian cập nhật"
     }
@@ -448,6 +449,7 @@ erDiagram
     PURCHASE_YARD_CURRENCY_FUNDS ||--o{ CURRENCIES : "currency_id"
     PURCHASE_YARD_GOODS_RECEIPTS ||--|| PURCHASE_YARDS : "purchase_yard_id"
     PURCHASE_YARD_GOODS_RECEIPTS ||--o{ PRODUCT_CATEGORIES : "category_id"
+    PURCHASE_YARD_GOODS_RECEIPTS }|--|| USERS : "created_by"
     PURCHASE_YARD_PRODUCT_INFO ||--|| PURCHASE_YARDS : "purchase_yard_id"
     PURCHASE_YARD_PRODUCT_INFO ||--o{ PRODUCT_CATEGORIES : "category_id"
     PURCHASE_YARD_PRODUCT_INFO ||--o{ CURRENCIES : "currency_id"

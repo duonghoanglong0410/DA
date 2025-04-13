@@ -53,17 +53,23 @@ class PurchaseYardProductInfoModel extends BaseModel
      * Lấy danh sách loại mặt hàng theo các bãi được phân quyền
      *
      * @param array $yardIds Danh sách ID của bãi
+     * @param int|null $currencyId ID của loại tiền tệ (mặc định lấy từ Constants::DEFAULT_CURRENCY_ID)
      * @return array
      */
-    public function getProductCategoriesByYardIds($yardIds)
+    public function getProductCategoriesByYardIds($yardIds, $currencyId = null)
     {
         if (empty($yardIds)) {
             return [];
         }
         
+        if ($currencyId === null) {
+            $currencyId = \App\Constants\Constants::DEFAULT_CURRENCY_ID;
+        }
+        
         $this->select('product_categories.id, product_categories.name, product_categories.abbreviation, COUNT(DISTINCT purchase_yard_product_info.purchase_yard_id) as yard_count');
         $this->join('product_categories', 'product_categories.id = purchase_yard_product_info.category_id');
         $this->whereIn('purchase_yard_product_info.purchase_yard_id', $yardIds);
+        $this->where('purchase_yard_product_info.currency_id', $currencyId);
         $this->groupBy('product_categories.id, product_categories.name, product_categories.abbreviation');
         $this->orderBy('product_categories.name', 'ASC');
         

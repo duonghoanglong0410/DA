@@ -15,4 +15,10 @@ class Constants
     
     // Chọn phiếu cân xuất kho: true = chỉ chọn 1 dòng, false = chọn nhiều dòng
     const SINGLE_SCALE_SELECTION = true;
+    
+    // Số ngày hiển thị lịch sử phiếu nhập hàng
+    const RECEIPT_HISTORY_DAYS = 7;
+    
+    // ID mặc định của loại tiền tệ
+    const DEFAULT_CURRENCY_ID = 2;
 } 

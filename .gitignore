@@ -21,3 +21,4 @@ application/logs/*
 tests/
 writable/*
 .~lock.*.*#
+php_errors.log
