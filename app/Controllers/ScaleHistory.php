@@ -379,4 +379,6 @@ class ScaleHistory extends BaseController
         
         return $processedData;
     }
+
+
 }

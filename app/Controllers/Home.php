@@ -16,7 +16,33 @@ class Home extends BaseController
     {
         $userId = $this->session->userId;
         // Lấy danh sách menu từ model (không dùng lệnh kết nối DB trực tiếp trong controller)
-        $menus = $this->userModel->getUserMainMenu($userId);
+        // $menus = $this->userModel->getUserMainMenu($userId);
+        $menus = [
+            [
+                'name' => 'Dashboard',
+                'icon' => 'fa-solid fa-house',
+                'url' => '/dashboard',
+                'children' => []
+            ],
+            [
+                'name' => 'Quản lý phiếu',
+                'icon' => 'fa-solid fa-file-invoice',
+                'url' => '/voucher',
+                'children' => []
+            ],
+            [
+                'name' => 'Quản lý hàng hóa',
+                'icon' => 'fa-solid fa-boxes-stacked',
+                'url' => '/goods',
+                'children' => []
+            ],
+            [
+                'name' => 'Quản lý khách hàng',
+                'icon' => 'fa-solid fa-users',
+                'url' => '/buyer',
+                'children' => []
+            ],
+        ];
         $this->assign('menus', $menus);
         return $this->render();
     }
